@@ -1,1 +1,2613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PeloteAr — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg:       #0D0F14;
+  --surf1:    #161A24;
+  --surf2:    #1E2436;
+  --surf3:    #252D42;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --green:    #00C27C;
+  --green-d:  rgba(0,194,124,0.12);
+  --amber:    #F5A623;
+  --amber-d:  rgba(245,166,35,0.12);
+  --red:      #EF4444;
+  --red-d:    rgba(239,68,68,0.12);
+  --gray:     #475569;
+  --gray-d:   rgba(71,85,105,0.2);
+  --blue:     #3B82F6;
+  --blue-d:   rgba(59,130,246,0.12);
+  --text:     #F1F5F9;
+  --text2:    #94A3B8;
+  --text3:    #475569;
+  --shadow:   0 4px 24px rgba(0,0,0,0.4);
+  --r:        14px;
+  --r-sm:     10px;
+  --nav-h:    72px;
+}
+
+html { height: 100%; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--surf1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  justify-content: space-between;
+  z-index: 100;
+}
+
+.topbar-brand {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+
+.topbar-brand span { color: var(--green); }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--green), #00875A);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ── MAIN ── */
+.main {
+  padding-top: 86px;
+  padding-bottom: var(--nav-h);
+  min-height: 100vh;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  background: var(--surf1);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0;
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-radius: var(--r-sm);
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-btn .nav-icon {
+  font-size: 22px;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+
+.nav-btn .nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: 0.02em;
+}
+
+.nav-btn.active .nav-label { color: var(--green); }
+.nav-btn.active .nav-icon { transform: scale(1.15); }
+
+/* ── SECTION PADDING ── */
+.section { padding: 20px 16px; }
+.section-gap { margin-bottom: 20px; }
+
+/* ── PAGE HEADER ── */
+.page-head {
+  padding: 20px 16px 12px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.page-sub {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 3px;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surf1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+}
+
+.card-body { padding: 16px; }
+
+.card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-row:last-child { border-bottom: none; }
+
+/* ── STAT CARDS ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: var(--surf1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+
+.stat-card.g::after { background: var(--green); }
+.stat-card.a::after { background: var(--amber); }
+.stat-card.b::after { background: var(--blue); }
+.stat-card.r::after { background: var(--red); }
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-delta {
+  font-size: 11px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.delta-up   { color: var(--green); }
+.delta-down { color: var(--red); }
+.delta-neu  { color: var(--text3); }
+
+/* ── CANCHA CARDS ── */
+.canchas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.cancha-card {
+  border-radius: var(--r);
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+  overflow: hidden;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 2px solid transparent;
+  active-scale: 0.97;
+}
+
+.cancha-card:active { transform: scale(0.96); }
+
+.cancha-card.libre {
+  background: linear-gradient(135deg, #0a2a1a, #0d3322);
+  border-color: rgba(0,194,124,0.3);
+}
+
+.cancha-card.ocupada {
+  background: linear-gradient(135deg, #2a0a0a, #331010);
+  border-color: rgba(239,68,68,0.3);
+}
+
+.cancha-card.proxima {
+  background: linear-gradient(135deg, #2a1e0a, #332510);
+  border-color: rgba(245,166,35,0.3);
+}
+
+.cancha-card.fuera {
+  background: var(--surf2);
+  border-color: var(--border);
+  opacity: 0.6;
+}
+
+.cancha-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.libre .status-dot    { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse-g 2s infinite; }
+.ocupada .status-dot  { background: var(--red); }
+.proxima .status-dot  { background: var(--amber); animation: pulse-a 1.5s infinite; }
+.fuera .status-dot    { background: var(--text3); }
+
+@keyframes pulse-g {
+  0%,100% { box-shadow: 0 0 6px var(--green); }
+  50% { box-shadow: 0 0 14px var(--green); }
+}
+
+@keyframes pulse-a {
+  0%,100% { box-shadow: 0 0 6px var(--amber); }
+  50% { box-shadow: 0 0 14px var(--amber); }
+}
+
+.libre .cancha-status    { color: var(--green); }
+.ocupada .cancha-status  { color: var(--red); }
+.proxima .cancha-status  { color: var(--amber); }
+.fuera .cancha-status    { color: var(--text3); }
+
+.cancha-nombre {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-top: 10px;
+}
+
+.cancha-deporte {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+.cancha-info {
+  margin-top: 12px;
+}
+
+.cancha-hora {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.cancha-cliente {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cancha-precio {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+/* ── BOTONES ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 13px 20px;
+  border-radius: var(--r-sm);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0,194,124,0.3);
+  width: 100%;
+}
+
+.btn-primary:active { background: #00a868; }
+
+.btn-secondary {
+  background: var(--surf2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  width: 100%;
+}
+
+.btn-danger {
+  background: var(--red-d);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.2);
+  width: 100%;
+}
+
+.btn-wa {
+  background: #25D366;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(37,211,102,0.3);
+  width: 100%;
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+  width: auto;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.btn-row .btn { flex: 1; }
+
+/* ── FAB ── */
+.fab {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 16px);
+  right: 16px;
+  width: 56px; height: 56px;
+  background: var(--green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,194,124,0.4);
+  z-index: 90;
+  border: none;
+  transition: transform 0.15s;
+}
+
+.fab:active { transform: scale(0.9); }
+
+/* ── TAGS ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag-green  { background: var(--green-d); color: var(--green); border: 1px solid rgba(0,194,124,0.2); }
+.tag-amber  { background: var(--amber-d); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+.tag-red    { background: var(--red-d);   color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
+.tag-gray   { background: var(--gray-d);  color: var(--text2); border: 1px solid var(--border); }
+.tag-blue   { background: var(--blue-d);  color: var(--blue);  border: 1px solid rgba(59,130,246,0.2); }
+
+/* ── FORMS ── */
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 7px;
+  display: block;
+  letter-spacing: 0.02em;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  background: var(--surf2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 13px 14px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.form-input:focus, .form-select:focus { border-color: var(--green); }
+.form-input::placeholder { color: var(--text3); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surf1);
+  border: 1px solid var(--border2);
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-handle {
+  width: 40px; height: 4px;
+  background: var(--surf3);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.modal-sub {
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 24px;
+}
+
+/* ── PAGO GRID ── */
+.pago-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.pago-btn {
+  background: var(--surf2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.pago-btn.active {
+  border-color: var(--green);
+  background: var(--green-d);
+}
+
+.pago-icon { font-size: 22px; margin-bottom: 4px; }
+.pago-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+.pago-btn.active .pago-label { color: var(--green); }
+
+/* ── RESERVA LIST ── */
+.reserva-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.reserva-item:active { background: var(--surf2); }
+.reserva-item:last-child { border-bottom: none; }
+
+.reserva-hora {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--green);
+  min-width: 48px;
+}
+
+.reserva-info { flex: 1; }
+.reserva-nombre { font-size: 15px; font-weight: 600; color: var(--text); }
+.reserva-detalle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+.reserva-precio {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: right;
+}
+
+.reserva-pago {
+  font-size: 11px;
+  color: var(--text3);
+  text-align: right;
+  margin-top: 2px;
+}
+
+/* ── BUFFET ── */
+.producto-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.producto-item:last-child { border-bottom: none; }
+
+.producto-emoji {
+  width: 42px; height: 42px;
+  background: var(--surf2);
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.producto-info { flex: 1; }
+.producto-nombre { font-size: 15px; font-weight: 600; color: var(--text); }
+.producto-stock { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.producto-stock.low { color: var(--amber); }
+
+.producto-precio {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qty-btn {
+  width: 34px; height: 34px;
+  background: var(--surf2);
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.1s;
+}
+
+.qty-btn:active { background: var(--surf3); transform: scale(0.9); }
+.qty-num { font-size: 16px; font-weight: 700; min-width: 20px; text-align: center; }
+
+/* ── CAJA ── */
+.caja-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.caja-item:last-child { border-bottom: none; }
+.caja-label { font-size: 14px; color: var(--text2); }
+.caja-val { font-size: 16px; font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; }
+.caja-val.green { color: var(--green); }
+
+/* ── SWITCH ── */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.switch-row:last-child { border-bottom: none; }
+.switch-info .sw-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.switch-info .sw-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+.toggle {
+  position: relative;
+  width: 44px; height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--surf3);
+  border-radius: 26px;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 1px solid var(--border2);
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; top: 3px;
+  background: var(--text3);
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.toggle input:checked + .toggle-slider { background: var(--green); border-color: var(--green); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: #fff; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 17px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--text3); line-height: 1.5; }
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 0 16px;
+  margin-bottom: 10px;
+}
+
+/* ── CANCHA ACTION SHEET ── */
+.action-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surf2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.action-item:active { background: var(--surf3); }
+
+.action-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.action-icon.green { background: var(--green-d); }
+.action-icon.amber { background: var(--amber-d); }
+.action-icon.red   { background: var(--red-d); }
+.action-icon.blue  { background: var(--blue-d); }
+.action-icon.gray  { background: var(--gray-d); }
+
+.action-text .a-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.action-text .a-sub   { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* ── SCROLL ── */
+::-webkit-scrollbar { width: 0; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 16px);
+  left: 16px; right: 16px;
+  background: var(--surf2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.green { border-color: rgba(0,194,124,0.3); }
+.toast.green::before { content: '✅'; }
+
+/* ── LOGIN ── */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--bg);
+}
+
+.login-logo {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.login-sub {
+  font-size: 14px;
+  color: var(--text2);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 340px;
+}
+
+/* ── CONFIG MENU ── */
+.config-section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.config-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+/* ── MODAL EDITAR PRODUCTO ── */
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ── PANEL OPERADOR OCULTO ── */
+.panel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,194,124,0.1);
+  border: 1px solid rgba(0,194,124,0.25);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.predios-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.predio-pkg {
+  background: var(--surf2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.predio-pkg.active {
+  border-color: var(--green);
+  background: var(--green-d);
+}
+
+.predio-pkg .pkg-num {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.04em;
+}
+
+.predio-pkg.active .pkg-num { color: var(--green); }
+.predio-pkg .pkg-label { font-size: 11px; color: var(--text3); margin-top: 4px; font-weight: 500; }
+.predio-pkg.active .pkg-label { color: var(--green); }
+.predio-pkg .pkg-precio { font-size: 13px; color: var(--text2); margin-top: 6px; font-weight: 600; }
+
+/* ── LOGIN GOOGLE ── */
+.btn-google {
+  background: #fff;
+  color: #1f1f1f;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: var(--r-sm);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 12px;
+}
+
+.btn-google:active { background: #f5f5f5; transform: scale(0.97); }
+
+.google-icon {
+  width: 20px; height: 20px;
+  background: linear-gradient(135deg, #4285F4 0%, #34A853 33%, #FBBC05 66%, #EA4335 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: white;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: var(--text3);
+  font-size: 12px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border2);
+}
+
+/* ── PIN TECLADO ── */
+.pin-display {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.pin-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--surf3);
+  border: 2px solid var(--border2);
+  transition: all 0.15s;
+}
+
+.pin-dot.filled {
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 8px rgba(0,194,124,0.5);
+}
+
+.pin-dot.error {
+  background: var(--red);
+  border-color: var(--red);
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.pin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.pin-key {
+  background: var(--surf2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 18px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.1s;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: "DM Sans", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pin-key:active { background: var(--surf3); transform: scale(0.93); }
+.pin-key.del { font-size: 18px; color: var(--text2); }
+.pin-key.zero { grid-column: 2; }
+
+/* ── CANCHAS PAQUETES ── */
+.canchas-pkg-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.canchas-pkg {
+  background: var(--surf2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.canchas-pkg.active {
+  border-color: var(--green);
+  background: var(--green-d);
+}
+
+.canchas-pkg .cp-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.canchas-pkg.active .cp-num { color: var(--green); }
+.canchas-pkg .cp-label { font-size: 10px; color: var(--text3); margin-top: 4px; font-weight: 500; }
+.canchas-pkg.active .cp-label { color: var(--green); }
+.canchas-pkg .cp-precio { font-size: 11px; color: var(--text2); margin-top: 5px; font-weight: 600; }
+
+/* ── RESUMEN WHATSAPP ── */
+.resumen-preview {
+  background: #0B1014;
+  border: 1px solid rgba(37,211,102,0.2);
+  border-radius: var(--r);
+  padding: 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: #d1fae5;
+  line-height: 1.8;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ LOGIN ═══ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-logo">⚽</div>
+  <div class="login-title">Complejo Deportivo</div>
+  <div class="login-sub">Ingresá para continuar</div>
+  <div class="login-form">
+    <div class="form-group">
+      <label class="form-label">Usuario</label>
+      <input class="form-input" id="loginUser" type="text" placeholder="tu@email.com" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="loginPass" type="password" placeholder="••••••••">
+    </div>
+    <button class="btn-google" onclick="doLoginGoogle()">
+        <div class="google-icon">G</div>
+        Continuar con Google
+      </button>
+      <div class="login-divider">o ingresá con email</div>
+      <button class="btn btn-primary" onclick="doLogin()" style="margin-top:8px">Ingresar</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ APP ═══ -->
+<div id="app" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand" onclick="tapBrand()" id="brand-tap" style="cursor:default;user-select:none">Complejo <span>Los Pinos</span></div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="topbarTime">00:00</div>
+      <div class="avatar" onclick="openModal('modal-perfil')">JR</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-head">
+        <div class="page-title">Buen día 👋</div>
+        <div class="page-sub" id="dashDate">Hoy, cargando...</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card g">
+          <div class="stat-label">Hoy</div>
+          <div class="stat-value" id="stat-hoy">$0</div>
+          <div class="stat-delta delta-up" id="stat-hoy-delta">— vs ayer</div>
+        </div>
+        <div class="stat-card b">
+          <div class="stat-label">Esta semana</div>
+          <div class="stat-value" id="stat-semana">$0</div>
+          <div class="stat-delta delta-neu">acumulado</div>
+        </div>
+        <div class="stat-card a">
+          <div class="stat-label">Reservas hoy</div>
+          <div class="stat-value" id="stat-reservas">0</div>
+          <div class="stat-delta delta-neu" id="stat-canchas">0 canchas ocupadas</div>
+        </div>
+        <div class="stat-card r">
+          <div class="stat-label">Buffet hoy</div>
+          <div class="stat-value" id="stat-buffet">$0</div>
+          <div class="stat-delta delta-neu">ventas del día</div>
+        </div>
+      </div>
+
+      <!-- MEDIOS DE PAGO -->
+      <div class="section-title">Medios de pago — hoy</div>
+      <div class="card" style="margin: 0 16px 16px">
+        <div class="card-body">
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">💵 Efectivo</span>
+            <span class="caja-val" id="mp-efectivo">$0</span>
+          </div>
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">🔄 Transferencia</span>
+            <span class="caja-val" id="mp-transferencia">$0</span>
+          </div>
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">💙 Mercado Pago</span>
+            <span class="caja-val" id="mp-mp">$0</span>
+          </div>
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">📱 Otras billeteras</span>
+            <span class="caja-val" id="mp-otras">$0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRÓXIMAS RESERVAS -->
+      <div class="section-title">Próximas reservas</div>
+      <div class="card" style="margin: 0 16px 16px" id="proximas-list">
+        <div class="card-body">
+          <div class="empty" style="padding:24px">
+            <div class="empty-icon">📅</div>
+            <div class="empty-title">Sin reservas próximas</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTÓN RESUMEN WA -->
+      <div style="padding: 0 16px 24px">
+        <button class="btn btn-wa" onclick="openModal('modal-resumen')">
+          📲 Enviar resumen del día por WhatsApp
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ CANCHAS ══ -->
+    <div class="page" id="page-canchas">
+      <div class="page-head">
+        <div class="page-title">Canchas</div>
+        <div class="page-sub">Estado en tiempo real</div>
+      </div>
+
+      <div class="canchas-grid" id="canchasGrid">
+        <!-- Se genera dinámicamente -->
+      </div>
+
+      <div style="height: 80px"></div>
+    </div>
+
+    <!-- ══ RESERVAS ══ -->
+    <div class="page" id="page-reservas">
+      <div class="page-head">
+        <div class="page-title">Reservas</div>
+        <div class="page-sub" id="reservas-fecha">Hoy</div>
+      </div>
+
+      <!-- NAV DÍA -->
+      <div style="display:flex;align-items:center;gap:10px;padding:0 16px 16px">
+        <button class="btn btn-secondary btn-sm" onclick="cambiarDia(-1)">‹ Anterior</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="irHoy()">Hoy</button>
+        <button class="btn btn-secondary btn-sm" onclick="cambiarDia(1)">Siguiente ›</button>
+      </div>
+
+      <div class="card" style="margin:0 16px" id="reservas-list">
+        <div class="empty">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Sin reservas este día</div>
+          <div class="empty-sub">Tocá + para agregar una nueva reserva</div>
+        </div>
+      </div>
+
+      <div style="height: 80px"></div>
+    </div>
+
+    <!-- ══ BUFFET ══ -->
+    <div class="page" id="page-buffet">
+      <div class="page-head">
+        <div class="page-title">Buffet</div>
+        <div class="page-sub">Registrar venta rápida</div>
+      </div>
+
+      <!-- CARRITO -->
+      <div id="carrito-bar" style="display:none;margin:0 16px 12px;background:var(--surf2);border:1px solid var(--border2);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:12px;color:var(--text2)">Total a cobrar</div>
+          <div style="font-size:22px;font-weight:700;letter-spacing:-0.03em" id="carrito-total">$0</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="cobrarBuffet()">Cobrar</button>
+      </div>
+
+      <div class="card" style="margin:0 16px" id="productos-list">
+        <div class="empty">
+          <div class="empty-icon">🥤</div>
+          <div class="empty-title">Sin productos</div>
+          <div class="empty-sub">Tocá + para agregar productos al buffet</div>
+        </div>
+      </div>
+
+      <div style="height: 80px"></div>
+    </div>
+
+    <!-- ══ MÁS (Config) ══ -->
+    <div class="page" id="page-mas">
+      <div class="page-head">
+        <div class="page-title">Configuración</div>
+        <div class="page-sub">Ajustes del sistema</div>
+      </div>
+
+      <!-- INFO ACCESO OCULTO -->
+      <div class="config-section">
+        <div class="card">
+          <div class="card-body" style="text-align:center;padding:20px">
+            <div style="font-size:32px;margin-bottom:8px">🔒</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.5">Funciones avanzadas disponibles<br>a través de tu operador</div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- DATOS DEL COMPLEJO -->
+      <div class="config-section">
+        <div class="config-title">🏢 Datos del complejo</div>
+        <div class="card">
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Nombre del complejo</label>
+              <input class="form-input" type="text" placeholder="Ej: Complejo Los Pinos" id="config-nombre">
+            </div>
+            <div class="form-group">
+              <label class="form-label">WhatsApp del dueño</label>
+              <input class="form-input" type="tel" placeholder="+54911..." id="config-wa">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hora inicio precio nocturno</label>
+              <input class="form-input" type="time" value="19:00" id="config-nocturno">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Precio turno diurno (1hs)</label>
+              <input class="form-input" type="number" placeholder="Ej: 15000" id="config-precio-dia">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:0 16px 32px">
+        <button class="btn btn-primary" onclick="guardarConfig()">Guardar configuración</button>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="showPage('dashboard', this)">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('canchas', this)">
+      <span class="nav-icon">🟢</span>
+      <span class="nav-label">Canchas</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('reservas', this)">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Reservas</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('buffet', this)">
+      <span class="nav-icon">🥤</span>
+      <span class="nav-label">Buffet</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('mas', this)">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Config</span>
+    </button>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fab" id="fab-btn" onclick="onFabClick()">＋</button>
+
+</div><!-- /app -->
+
+<!-- ════════════════════ MODALES ════════════════════ -->
+
+<!-- MODAL CANCHA -->
+<div class="modal-overlay" id="modal-cancha">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-cancha-nombre">Cancha 1</div>
+    <div class="modal-sub" id="modal-cancha-estado">Libre · Precio diurno: $15.000/hs</div>
+    <div class="action-list">
+      <div class="action-item" onclick="abrirReserva(); closeModal('modal-cancha')">
+        <div class="action-icon green">📅</div>
+        <div class="action-text">
+          <div class="a-title">Nueva reserva</div>
+          <div class="a-sub">Registrar turno para esta cancha</div>
+        </div>
+      </div>
+      <div class="action-item" onclick="abrirCobro(); closeModal('modal-cancha')">
+        <div class="action-icon amber">💰</div>
+        <div class="action-text">
+          <div class="a-title">Cobrar turno</div>
+          <div class="a-sub">Registrar pago de reserva activa</div>
+        </div>
+      </div>
+      <div class="action-item" onclick="closeModal('modal-cancha')">
+        <div class="action-icon red">❌</div>
+        <div class="action-text">
+          <div class="a-title">Cancelar reserva</div>
+          <div class="a-sub">Liberar el turno activo</div>
+        </div>
+      </div>
+      <div class="action-item" onclick="closeModal('modal-cancha')">
+        <div class="action-icon gray">📋</div>
+        <div class="action-text">
+          <div class="a-title">Ver historial</div>
+          <div class="a-sub">Reservas anteriores de esta cancha</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cancha')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA RESERVA -->
+<div class="modal-overlay" id="modal-reserva">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nueva reserva</div>
+    <div class="modal-sub">Completá los datos del turno</div>
+
+    <div class="form-group">
+      <label class="form-label">Cancha</label>
+      <select class="form-select" id="res-cancha">
+        <option>Cancha 1 — Fútbol 7</option>
+        <option>Cancha 2 — Fútbol 7</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre del cliente</label>
+      <input class="form-input" type="text" placeholder="Nombre y apellido" id="res-nombre">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Teléfono</label>
+      <input class="form-input" type="tel" placeholder="+54911..." id="res-tel">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input class="form-input" type="date" id="res-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hora inicio</label>
+        <input class="form-input" type="time" id="res-hora">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Duración</label>
+      <select class="form-select" id="res-duracion" onchange="calcularPrecio()">
+        <option value="60">1 hora</option>
+        <option value="90">1 hora 30 min</option>
+        <option value="120">2 horas</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Medio de pago</label>
+      <div class="pago-grid">
+        <div class="pago-btn active" onclick="selectPago(this, 'efectivo')">
+          <div class="pago-icon">💵</div>
+          <div class="pago-label">Efectivo</div>
+        </div>
+        <div class="pago-btn" onclick="selectPago(this, 'transferencia')">
+          <div class="pago-icon">🔄</div>
+          <div class="pago-label">Transferencia</div>
+        </div>
+        <div class="pago-btn" onclick="selectPago(this, 'mercadopago')">
+          <div class="pago-icon">💙</div>
+          <div class="pago-label">Mercado Pago</div>
+        </div>
+        <div class="pago-btn" onclick="selectPago(this, 'otra')">
+          <div class="pago-icon">📱</div>
+          <div class="pago-label">Otra billetera</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observaciones</label>
+      <input class="form-input" type="text" placeholder="Opcional..." id="res-obs">
+    </div>
+
+    <div style="background:var(--surf2);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:14px;color:var(--text2)">Total a cobrar</span>
+      <span style="font-size:22px;font-weight:700;letter-spacing:-0.03em;color:var(--green)" id="res-precio-display">$15.000</span>
+    </div>
+
+    <button class="btn btn-primary" onclick="guardarReserva()">Confirmar reserva</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-reserva')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COBRO BUFFET -->
+<div class="modal-overlay" id="modal-cobro-buffet">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Cobrar venta</div>
+    <div class="modal-sub" id="cobro-detalle">Detalle de la venta</div>
+
+    <div class="form-group">
+      <label class="form-label">Total</label>
+      <div style="font-size:36px;font-weight:700;letter-spacing:-0.04em;color:var(--green);margin-bottom:16px" id="cobro-total-display">$0</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Medio de pago</label>
+      <div class="pago-grid">
+        <div class="pago-btn active" onclick="selectPago(this, 'efectivo')">
+          <div class="pago-icon">💵</div>
+          <div class="pago-label">Efectivo</div>
+        </div>
+        <div class="pago-btn" onclick="selectPago(this, 'transferencia')">
+          <div class="pago-icon">🔄</div>
+          <div class="pago-label">Transferencia</div>
+        </div>
+        <div class="pago-btn" onclick="selectPago(this, 'mercadopago')">
+          <div class="pago-icon">💙</div>
+          <div class="pago-label">Mercado Pago</div>
+        </div>
+        <div class="pago-btn" onclick="selectPago(this, 'otra')">
+          <div class="pago-icon">📱</div>
+          <div class="pago-label">Otra billetera</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="confirmarCobroBuffet()">Confirmar cobro</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cobro-buffet')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO PRODUCTO BUFFET -->
+<div class="modal-overlay" id="modal-producto">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nuevo producto</div>
+    <div class="modal-sub">Agregá un producto al buffet</div>
+
+    <div class="form-group">
+      <label class="form-label">Nombre del producto</label>
+      <input class="form-input" type="text" placeholder="Ej: Coca-Cola 500ml" id="prod-nombre">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label class="form-label">Precio</label>
+        <input class="form-input" type="number" placeholder="0" id="prod-precio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock inicial</label>
+        <input class="form-input" type="number" placeholder="0" id="prod-stock">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji (ícono)</label>
+      <input class="form-input" type="text" placeholder="🥤" id="prod-emoji" maxlength="2">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Alerta de stock bajo</label>
+      <input class="form-input" type="number" placeholder="Ej: 5" id="prod-alerta">
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="guardarProducto()">Agregar producto</button>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-producto')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESUMEN WHATSAPP -->
+<div class="modal-overlay" id="modal-resumen">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Resumen del día</div>
+    <div class="modal-sub">Listo para enviar por WhatsApp</div>
+    <div class="resumen-preview" id="resumen-texto"></div>
+    <button class="btn btn-wa" onclick="enviarResumenWA()">📲 Abrir WhatsApp y enviar</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-resumen')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PERFIL -->
+<div class="modal-overlay" id="modal-perfil">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Mi cuenta</div>
+    <div class="modal-sub">Sesión activa</div>
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--green),#00875A);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin:0 auto 12px">JR</div>
+      <div style="font-size:17px;font-weight:700">Juan Rodríguez</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px">Administrador</div>
+    </div>
+    <button class="btn btn-danger" onclick="doLogout()">Cerrar sesión</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-perfil')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PIN -->
+<div class="modal-overlay" id="modal-pin">
+  <div class="modal" style="text-align:center">
+    <div class="modal-handle"></div>
+    <div style="font-size:28px;margin-bottom:8px">🔐</div>
+    <div class="modal-title">Panel del operador</div>
+    <div class="modal-sub">Ingresá el código de acceso</div>
+
+    <div class="pin-display">
+      <div class="pin-dot" id="pd-0"></div>
+      <div class="pin-dot" id="pd-1"></div>
+      <div class="pin-dot" id="pd-2"></div>
+      <div class="pin-dot" id="pd-3"></div>
+    </div>
+
+    <div class="pin-grid">
+      <div class="pin-key" onclick="pinKey(1)">1</div>
+      <div class="pin-key" onclick="pinKey(2)">2</div>
+      <div class="pin-key" onclick="pinKey(3)">3</div>
+      <div class="pin-key" onclick="pinKey(4)">4</div>
+      <div class="pin-key" onclick="pinKey(5)">5</div>
+      <div class="pin-key" onclick="pinKey(6)">6</div>
+      <div class="pin-key" onclick="pinKey(7)">7</div>
+      <div class="pin-key" onclick="pinKey(8)">8</div>
+      <div class="pin-key" onclick="pinKey(9)">9</div>
+      <div class="pin-key del" onclick="pinDel()">⌫</div>
+      <div class="pin-key zero" onclick="pinKey(0)">0</div>
+    </div>
+
+    <div style="margin-top:20px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pin');resetPin()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PANEL OPERADOR OCULTO -->
+<div class="modal-overlay" id="modal-operador">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="panel-badge">🔐 Panel del operador</div>
+      <div class="modal-title">Configuración avanzada</div>
+      <div class="modal-sub">Visible solo para el operador del sistema</div>
+    </div>
+
+    <!-- TIPO DEPORTE -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Tipo de deporte</div>
+      <select class="form-select" id="op-deporte" onchange="cambiarDeporte(this.value)">
+        <option value="futbol7">⚽ Fútbol 7</option>
+        <option value="futbol5">⚽ Fútbol 5</option>
+        <option value="futbol11">⚽ Fútbol 11</option>
+        <option value="padel">🎾 Pádel</option>
+        <option value="tenis">🎾 Tenis</option>
+      </select>
+    </div>
+
+    <!-- CANCHAS -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Cantidad de canchas</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Base incluye 2. Adicional por paquete.</div>
+      <div class="canchas-pkg-grid" id="canchas-pkg-grid">
+        <div class="canchas-pkg active" onclick="selectCanchas(this, 2)">
+          <div class="cp-num">2</div>
+          <div class="cp-label">Base</div>
+          <div class="cp-precio">Incluido</div>
+        </div>
+        <div class="canchas-pkg" onclick="selectCanchas(this, 4)">
+          <div class="cp-num">4</div>
+          <div class="cp-label">Canchas</div>
+          <div class="cp-precio">+$XX/mes</div>
+        </div>
+        <div class="canchas-pkg" onclick="selectCanchas(this, 6)">
+          <div class="cp-num">6</div>
+          <div class="cp-label">Canchas</div>
+          <div class="cp-precio">+$XX/mes</div>
+        </div>
+        <div class="canchas-pkg" onclick="selectCanchas(this, 8)">
+          <div class="cp-num">8</div>
+          <div class="cp-label">Canchas</div>
+          <div class="cp-precio">+$XX/mes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREDIOS -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Cantidad de predios</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Sedes habilitadas para este cliente</div>
+      <div class="predios-grid" id="predios-grid">
+        <div class="predio-pkg active" onclick="selectPredio(this, 1)">
+          <div class="pkg-num">1</div>
+          <div class="pkg-label">Predio base</div>
+          <div class="pkg-precio">Incluido</div>
+        </div>
+        <div class="predio-pkg" onclick="selectPredio(this, 2)">
+          <div class="pkg-num">2</div>
+          <div class="pkg-label">Predios</div>
+          <div class="pkg-precio">+$XX/mes</div>
+        </div>
+        <div class="predio-pkg" onclick="selectPredio(this, 3)">
+          <div class="pkg-num">3</div>
+          <div class="pkg-label">Predios</div>
+          <div class="pkg-precio">+$XX/mes</div>
+        </div>
+        <div class="predio-pkg" onclick="selectPredio(this, 4)">
+          <div class="pkg-num">4</div>
+          <div class="pkg-label">Predios</div>
+          <div class="pkg-precio">+$XX/mes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SWITCHES -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Módulos activos</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="switch-row">
+            <div class="switch-info">
+              <div class="sw-name">Buffet / cantina</div>
+              <div class="sw-desc">Activa el módulo de ventas</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked onchange="toggleFeature('buffet', this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div class="switch-info">
+              <div class="sw-name">Precio nocturno</div>
+              <div class="sw-desc">Diferencia precio según horario</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked onchange="toggleFeature('nocturno', this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div class="switch-info">
+              <div class="sw-name">Mercado Pago</div>
+              <div class="sw-desc">Habilitar como medio de pago</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div class="switch-info">
+              <div class="sw-name">Otras billeteras</div>
+              <div class="sw-desc">Ualá, Modo, Naranja X, etc.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="closeModal('modal-operador')">Cerrar panel</button>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PRODUCTO -->
+<div class="modal-overlay" id="modal-editar-producto">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="edit-prod-title">Editar producto</div>
+    <div class="modal-sub">Modificá los datos del producto</div>
+    <input type="hidden" id="edit-prod-id">
+
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" type="text" id="edit-prod-nombre">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label class="form-label">Precio</label>
+        <input class="form-input" type="number" id="edit-prod-precio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock</label>
+        <input class="form-input" type="number" id="edit-prod-stock">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label class="form-label">Emoji</label>
+        <input class="form-input" type="text" id="edit-prod-emoji" maxlength="2">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Alerta stock</label>
+        <input class="form-input" type="number" id="edit-prod-alerta">
+      </div>
+    </div>
+
+    <div class="edit-actions">
+      <button class="btn btn-primary" onclick="guardarEdicionProducto()">Guardar cambios</button>
+    </div>
+    <div class="edit-actions">
+      <button class="btn btn-danger" onclick="eliminarProducto()">🗑️ Eliminar producto</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-editar-producto')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER DEMO -->
+<div style="position:fixed;top:60px;left:0;right:0;background:rgba(245,166,35,0.15);border-bottom:1px solid rgba(245,166,35,0.3);padding:6px 16px;text-align:center;font-size:12px;color:#F5A623;font-weight:600;z-index:99;letter-spacing:0.02em">
+  ⚡ MODO DEMO — Los datos no se guardan
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════ API FIREBASE ═══
+
+const API = 'https://botpanel-production-c941.up.railway.app/api/pelotear';
+
+// MODO DEMO — sin Firebase
+async function apiGet(path) { return null; }
+async function apiPost(path, body) { return { ok: true, id: Date.now() }; }
+async function apiDelete(path) { return true; }
+
+// ═══════════════════════════════ ESTADO GLOBAL ═══
+
+// ── UTILIDADES (van primero porque todo lo demás las necesita) ──
+function hoy() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function sumarMinutos(hora, mins) {
+  const [h, m] = hora.split(':').map(Number);
+  const total = h * 60 + m + mins;
+  return String(Math.floor(total/60)).padStart(2,'0') + ':' + String(total%60).padStart(2,'0');
+}
+
+function estadoCanchaDemo(canchaId, reservas) {
+  const ahora = new Date().toTimeString().slice(0,5);
+  const hoyStr = hoy();
+  const reservasCancha = reservas.filter(r => r.canchaId === canchaId && r.fecha === hoyStr);
+  const activa = reservasCancha.find(r => r.hora <= ahora && ahora < sumarMinutos(r.hora, r.duracion));
+  if (activa) return 'ocupada';
+  const proxima = reservasCancha.find(r => r.hora > ahora);
+  if (proxima) return 'proxima';
+  return 'libre';
+}
+
+// ── DATOS DE DEMO ──
+const hoyStr = hoy();
+
+const DEMO_RESERVAS = [
+  { id: 1, canchaId: 1, nombre: 'Lucas Martínez', tel: '1155443322', fecha: hoyStr, hora: '08:00', duracion: 60, precio: 15000, pago: 'efectivo', estado: 'confirmada' },
+  { id: 2, canchaId: 2, nombre: 'Grupo de Rodrigo', tel: '1144332211', fecha: hoyStr, hora: '09:00', duracion: 90, precio: 22500, pago: 'mercadopago', estado: 'confirmada' },
+  { id: 3, canchaId: 1, nombre: 'Diego Fernández', tel: '1166554433', fecha: hoyStr, hora: '10:00', duracion: 60, precio: 15000, pago: 'transferencia', estado: 'confirmada' },
+  { id: 4, canchaId: 2, nombre: 'Equipo Los Pibes', tel: '1177665544', fecha: hoyStr, hora: '11:30', duracion: 60, precio: 15000, pago: 'efectivo', estado: 'confirmada' },
+  { id: 5, canchaId: 1, nombre: 'Sebastián Torres', tel: '1188776655', fecha: hoyStr, hora: '14:00', duracion: 90, precio: 22500, pago: 'efectivo', estado: 'confirmada' },
+  { id: 6, canchaId: 2, nombre: 'Pablo y amigos', tel: '1199887766', fecha: hoyStr, hora: '16:00', duracion: 60, precio: 15000, pago: 'mercadopago', estado: 'confirmada' },
+  { id: 7, canchaId: 1, nombre: 'Matías Gómez', tel: '1100998877', fecha: hoyStr, hora: '20:00', duracion: 60, precio: 20000, pago: 'efectivo', estado: 'confirmada' },
+  { id: 8, canchaId: 2, nombre: 'Gastón Pérez', tel: '1111009988', fecha: hoyStr, hora: '21:00', duracion: 90, precio: 30000, pago: 'transferencia', estado: 'confirmada' },
+];
+
+const DEMO_VENTAS_BUFFET = [
+  { id: 101, items: {}, total: 3500, pago: 'efectivo', fecha: hoyStr, hora: '09:15' },
+  { id: 102, items: {}, total: 2400, pago: 'mercadopago', fecha: hoyStr, hora: '10:30' },
+  { id: 103, items: {}, total: 1800, pago: 'efectivo', fecha: hoyStr, hora: '11:45' },
+  { id: 104, items: {}, total: 4200, pago: 'efectivo', fecha: hoyStr, hora: '14:20' },
+  { id: 105, items: {}, total: 2000, pago: 'transferencia', fecha: hoyStr, hora: '16:10' },
+];
+
+const STATE = {
+  currentPage: 'dashboard',
+  currentPago: 'efectivo',
+  currentCancha: null,
+  reservasFecha: new Date(),
+  canchas: [
+    { id: 1, nombre: 'Cancha 1', deporte: 'Fútbol 7', estado: estadoCanchaDemo(1, DEMO_RESERVAS), precioDia: 15000, precioNoche: 20000 },
+    { id: 2, nombre: 'Cancha 2', deporte: 'Fútbol 7', estado: estadoCanchaDemo(2, DEMO_RESERVAS), precioDia: 15000, precioNoche: 20000 }
+  ],
+  reservas: [...DEMO_RESERVAS],
+  productos: [
+    { id: 1, nombre: 'Coca-Cola 500ml', precio: 1500, stock: 18, alerta: 6, emoji: '🥤' },
+    { id: 2, nombre: 'Agua mineral', precio: 800, stock: 4, alerta: 5, emoji: '💧' },
+    { id: 3, nombre: 'Gatorade', precio: 1800, stock: 10, alerta: 4, emoji: '⚡' },
+    { id: 4, nombre: 'Alfajor Milka', precio: 1200, stock: 15, alerta: 5, emoji: '🍫' },
+    { id: 5, nombre: 'Papas fritas', precio: 2000, stock: 8, alerta: 3, emoji: '🥔' },
+    { id: 6, nombre: 'Empanada', precio: 1500, stock: 20, alerta: 5, emoji: '🥟' },
+    { id: 7, nombre: 'Cerveza lata', precio: 2500, stock: 24, alerta: 6, emoji: '🍺' },
+    { id: 8, nombre: 'Energizante', precio: 2800, stock: 2, alerta: 4, emoji: '🔋' },
+  ],
+  ventasBuffet: [...DEMO_VENTAS_BUFFET],
+  carrito: {},
+  config: {
+    nombre: 'Complejo Los Pinos',
+    wa: '',
+    nocturnoDesde: '19:00',
+    precioDia: 15000,
+    features: { buffet: true, nocturno: true },
+    predios: 1
+  }
+};
+
+// ═══════════════════════════════ LOGIN ═══
+
+function doLogin() {
+  const user = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
+  if (!user || !pass) { showToast('Completá usuario y contraseña'); return; }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+}
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  closeModal('modal-perfil');
+}
+
+// ═══════════════════════════════ INIT ═══
+
+function initApp() {
+  updateClock();
+  setInterval(updateClock, 1000);
+  updateDashDate();
+  updateDashboard();
+  renderCanchas();
+  renderReservas();
+  renderProductos();
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('topbarTime').textContent =
+    now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function updateDashDate() {
+  const now = new Date();
+  document.getElementById('dashDate').textContent =
+    now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+// ═══════════════════════════════ NAVEGACIÓN ═══
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  STATE.currentPage = id;
+
+  const fab = document.getElementById('fab-btn');
+  fab.style.display = ['canchas', 'reservas', 'buffet'].includes(id) ? 'flex' : 'none';
+
+  if (id === 'reservas') renderReservas();
+  if (id === 'buffet') renderProductos();
+}
+
+function onFabClick() {
+  if (STATE.currentPage === 'reservas') abrirReserva();
+  else if (STATE.currentPage === 'buffet') openModal('modal-producto');
+  else if (STATE.currentPage === 'canchas') abrirReserva();
+}
+
+// ═══════════════════════════════ DASHBOARD ═══
+
+function updateDashboard() {
+  const reservasHoy = STATE.reservas.filter(r => r.fecha === hoy());
+  const totalCanchas = reservasHoy.reduce((s, r) => s + r.precio, 0);
+  const totalBuffet = STATE.ventasBuffet
+    .filter(v => v.fecha === hoy())
+    .reduce((s, v) => s + v.total, 0);
+  const totalHoy = totalCanchas + totalBuffet;
+
+  document.getElementById('stat-hoy').textContent = formatPeso(totalHoy);
+  document.getElementById('stat-semana').textContent = formatPeso(totalHoy * 3.2);
+  document.getElementById('stat-reservas').textContent = reservasHoy.length;
+
+  const ocupadas = STATE.canchas.filter(c => c.estado === 'ocupada').length;
+  document.getElementById('stat-canchas').textContent = `${ocupadas} cancha${ocupadas !== 1 ? 's' : ''} ocupada${ocupadas !== 1 ? 's' : ''}`;
+  document.getElementById('stat-buffet').textContent = formatPeso(totalBuffet);
+
+  // Medios de pago
+  const mp = { efectivo: 0, transferencia: 0, mercadopago: 0, otras: 0 };
+  reservasHoy.forEach(r => {
+    if (r.pago === 'efectivo') mp.efectivo += r.precio;
+    else if (r.pago === 'transferencia') mp.transferencia += r.precio;
+    else if (r.pago === 'mercadopago') mp.mercadopago += r.precio;
+    else mp.otras += r.precio;
+  });
+  STATE.ventasBuffet.filter(v => v.fecha === hoy()).forEach(v => {
+    if (v.pago === 'efectivo') mp.efectivo += v.total;
+    else if (v.pago === 'transferencia') mp.transferencia += v.total;
+    else if (v.pago === 'mercadopago') mp.mercadopago += v.total;
+    else mp.otras += v.total;
+  });
+
+  document.getElementById('mp-efectivo').textContent = formatPeso(mp.efectivo);
+  document.getElementById('mp-transferencia').textContent = formatPeso(mp.transferencia);
+  document.getElementById('mp-mp').textContent = formatPeso(mp.mercadopago);
+  document.getElementById('mp-otras').textContent = formatPeso(mp.otras);
+
+  // Próximas reservas
+  const ahora = new Date();
+  const proximas = STATE.reservas
+    .filter(r => r.fecha === hoy() && r.hora > ahora.toTimeString().slice(0, 5))
+    .sort((a, b) => a.hora.localeCompare(b.hora))
+    .slice(0, 3);
+
+  const list = document.getElementById('proximas-list');
+  if (proximas.length === 0) {
+    list.innerHTML = '<div class="card-body"><div class="empty" style="padding:24px"><div class="empty-icon">📅</div><div class="empty-title">Sin reservas próximas</div></div></div>';
+  } else {
+    list.innerHTML = proximas.map(r => {
+      const c = STATE.canchas.find(c => c.id === r.canchaId);
+      return `<div class="reserva-item" onclick="abrirReserva()">
+        <div class="reserva-hora">${r.hora}</div>
+        <div class="reserva-info">
+          <div class="reserva-nombre">${r.nombre}</div>
+          <div class="reserva-detalle">${c?.nombre || ''} · ${r.duracion} min</div>
+        </div>
+        <div>
+          <div class="reserva-precio">${formatPeso(r.precio)}</div>
+          <div class="reserva-pago">${labelPago(r.pago)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════ CANCHAS ═══
+
+function renderCanchas() {
+  const grid = document.getElementById('canchasGrid');
+  grid.innerHTML = STATE.canchas.map(c => {
+    const estadoLabel = { libre: 'Libre', ocupada: 'Ocupada', proxima: 'Próxima reserva', fuera: 'Fuera de servicio' };
+    const reserva = STATE.reservas.find(r => r.canchaId === c.id && r.fecha === hoy() && (c.estado === 'ocupada' || c.estado === 'proxima'));
+
+    return `<div class="cancha-card ${c.estado}" onclick="abrirCancha(${c.id})">
+      <div>
+        <div class="cancha-status">
+          <div class="status-dot"></div>
+          ${estadoLabel[c.estado]}
+        </div>
+        <div class="cancha-nombre">${c.nombre}</div>
+        <div class="cancha-deporte">${c.deporte}</div>
+      </div>
+      <div class="cancha-info">
+        ${reserva ? `<div class="cancha-hora">${reserva.hora} · ${reserva.duracion}min</div>
+        <div class="cancha-cliente">${reserva.nombre}</div>
+        <div class="cancha-precio">${formatPeso(reserva.precio)}</div>` :
+        `<div class="cancha-precio">${formatPeso(c.precioDia)}/hs diurno</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirCancha(id) {
+  const c = STATE.canchas.find(c => c.id === id);
+  STATE.currentCancha = c;
+  document.getElementById('modal-cancha-nombre').textContent = c.nombre;
+  document.getElementById('modal-cancha-estado').textContent =
+    `${c.deporte} · Precio diurno: ${formatPeso(c.precioDia)}/hs`;
+  openModal('modal-cancha');
+}
+
+// ═══════════════════════════════ RESERVAS ═══
+
+function renderReservas() {
+  const fechaStr = formatFecha(STATE.reservasFecha);
+  document.getElementById('reservas-fecha').textContent = fechaStr;
+
+  const fechaKey = STATE.reservasFecha.toISOString().slice(0, 10);
+  const reservasDelDia = STATE.reservas
+    .filter(r => r.fecha === fechaKey)
+    .sort((a, b) => a.hora.localeCompare(b.hora));
+
+  const list = document.getElementById('reservas-list');
+  if (reservasDelDia.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Sin reservas este día</div><div class="empty-sub">Tocá + para agregar una nueva reserva</div></div>';
+    return;
+  }
+
+  list.innerHTML = reservasDelDia.map(r => {
+    const c = STATE.canchas.find(c => c.id === r.canchaId);
+    return `<div class="reserva-item">
+      <div class="reserva-hora">${r.hora}</div>
+      <div class="reserva-info">
+        <div class="reserva-nombre">${r.nombre}</div>
+        <div class="reserva-detalle">${c?.nombre || ''} · ${r.duracion} min</div>
+      </div>
+      <div>
+        <div class="reserva-precio">${formatPeso(r.precio)}</div>
+        <div class="reserva-pago">${labelPago(r.pago)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function cambiarDia(delta) {
+  STATE.reservasFecha = new Date(STATE.reservasFecha);
+  STATE.reservasFecha.setDate(STATE.reservasFecha.getDate() + delta);
+  renderReservas();
+}
+
+function irHoy() {
+  STATE.reservasFecha = new Date();
+  renderReservas();
+}
+
+function abrirReserva() {
+  const hoyStr = new Date().toISOString().slice(0, 10);
+  const ahoraStr = new Date().toTimeString().slice(0, 5);
+  document.getElementById('res-fecha').value = hoyStr;
+  document.getElementById('res-hora').value = ahoraStr;
+  document.getElementById('res-nombre').value = '';
+  document.getElementById('res-tel').value = '';
+  calcularPrecio();
+  openModal('modal-reserva');
+}
+
+function calcularPrecio() {
+  const hora = document.getElementById('res-hora')?.value || '10:00';
+  const duracion = parseInt(document.getElementById('res-duracion')?.value || 60);
+  const nocturnoDesde = STATE.config.nocturnoDesde;
+  const esNocturno = hora >= nocturnoDesde;
+
+  const c = STATE.canchas[0];
+  const precioHora = esNocturno ? c.precioNoche : c.precioDia;
+  const total = Math.round(precioHora * duracion / 60);
+
+  const display = document.getElementById('res-precio-display');
+  if (display) display.textContent = formatPeso(total);
+  return total;
+}
+
+async function guardarReserva() {
+  const nombre = document.getElementById('res-nombre').value.trim();
+  const tel = document.getElementById('res-tel').value.trim();
+  const fecha = document.getElementById('res-fecha').value;
+  const hora = document.getElementById('res-hora').value;
+  const duracion = parseInt(document.getElementById('res-duracion').value);
+  const canchaIdx = document.getElementById('res-cancha').selectedIndex;
+  const canchaId = STATE.canchas[canchaIdx]?.id || 1;
+
+  if (!nombre || !fecha || !hora) { showToast('Completá todos los campos'); return; }
+
+  const precio = calcularPrecio();
+  const nueva = {
+    canchaId,
+    nombre, tel, fecha, hora, duracion, precio,
+    pago: STATE.currentPago,
+    estado: 'confirmada'
+  };
+
+  // Guardar en Firebase
+  const result = await apiPost('/reservas', nueva);
+  nueva.id = result?.id || Date.now();
+
+  STATE.reservas.push(nueva);
+  STATE.canchas.forEach(c => { c.estado = estadoCanchaDemo(c.id, STATE.reservas); });
+  updateDashboard();
+  renderCanchas();
+  renderReservas();
+  closeModal('modal-reserva');
+  showToast('Reserva confirmada ✅', 'green');
+}
+
+// ═══════════════════════════════ BUFFET ═══
+
+function renderProductos() {
+  const list = document.getElementById('productos-list');
+  if (STATE.productos.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🥤</div><div class="empty-title">Sin productos</div><div class="empty-sub">Tocá + para agregar productos al buffet</div></div>';
+    return;
+  }
+
+  list.innerHTML = STATE.productos.map(p => {
+    const enCarrito = STATE.carrito[p.id] || 0;
+    const stockBajo = p.stock <= p.alerta;
+    return `<div class="producto-item">
+      <div class="producto-emoji" onclick="abrirEditarProducto(${p.id})" style="cursor:pointer">${p.emoji}</div>
+      <div class="producto-info">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="producto-nombre">${p.nombre}</div>
+          <div onclick="abrirEditarProducto(${p.id})" style="cursor:pointer;font-size:11px;color:var(--text3);background:var(--surf3);border-radius:6px;padding:2px 7px;flex-shrink:0">✏️</div>
+        </div>
+        <div class="producto-stock ${stockBajo ? 'low' : ''}">
+          Stock: ${p.stock} ${stockBajo ? '⚠️ Bajo' : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="producto-precio">${formatPeso(p.precio)}</div>
+        <div class="qty-control">
+          <div class="qty-btn" onclick="cambiarCarrito(${p.id}, -1)">−</div>
+          <div class="qty-num">${enCarrito}</div>
+          <div class="qty-btn" onclick="cambiarCarrito(${p.id}, 1)">＋</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateCarrito();
+}
+
+function cambiarCarrito(productoId, delta) {
+  const p = STATE.productos.find(p => p.id === productoId);
+  if (!p) return;
+
+  const actual = STATE.carrito[productoId] || 0;
+  const nuevo = Math.max(0, Math.min(actual + delta, p.stock));
+  if (nuevo === 0) delete STATE.carrito[productoId];
+  else STATE.carrito[productoId] = nuevo;
+
+  renderProductos();
+}
+
+function updateCarrito() {
+  const total = Object.entries(STATE.carrito).reduce((s, [id, qty]) => {
+    const p = STATE.productos.find(p => p.id === parseInt(id));
+    return s + (p ? p.precio * qty : 0);
+  }, 0);
+
+  const bar = document.getElementById('carrito-bar');
+  const totalEl = document.getElementById('carrito-total');
+  if (total > 0) {
+    bar.style.display = 'flex';
+    totalEl.textContent = formatPeso(total);
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function cobrarBuffet() {
+  const total = Object.entries(STATE.carrito).reduce((s, [id, qty]) => {
+    const p = STATE.productos.find(p => p.id === parseInt(id));
+    return s + (p ? p.precio * qty : 0);
+  }, 0);
+
+  const detalle = Object.entries(STATE.carrito).map(([id, qty]) => {
+    const p = STATE.productos.find(p => p.id === parseInt(id));
+    return `${p.nombre} x${qty}`;
+  }).join(', ');
+
+  document.getElementById('cobro-total-display').textContent = formatPeso(total);
+  document.getElementById('cobro-detalle').textContent = detalle;
+  openModal('modal-cobro-buffet');
+}
+
+async function confirmarCobroBuffet() {
+  const total = Object.entries(STATE.carrito).reduce((s, [id, qty]) => {
+    const p = STATE.productos.find(p => p.id === parseInt(id));
+    return s + (p ? p.precio * qty : 0);
+  }, 0);
+
+  // Descontar stock
+  Object.entries(STATE.carrito).forEach(([id, qty]) => {
+    const p = STATE.productos.find(p => p.id === parseInt(id));
+    if (p) p.stock = Math.max(0, p.stock - qty);
+  });
+
+  // Registrar venta
+  const venta = {
+    items: { ...STATE.carrito },
+    total,
+    pago: STATE.currentPago,
+    fecha: hoy(),
+    hora: new Date().toTimeString().slice(0, 5)
+  };
+
+  // Guardar en Firebase
+  const result = await apiPost('/ventas', venta);
+  venta.id = result?.id || Date.now();
+  STATE.ventasBuffet.push(venta);
+
+  // Guardar productos actualizados (stock)
+  await apiPost('/productos', { lista: STATE.productos });
+
+  STATE.carrito = {};
+  updateDashboard();
+  renderProductos();
+  closeModal('modal-cobro-buffet');
+  showToast('Venta registrada ✅', 'green');
+}
+
+async function guardarProducto() {
+  const nombre = document.getElementById('prod-nombre').value.trim();
+  const precio = parseInt(document.getElementById('prod-precio').value);
+  const stock = parseInt(document.getElementById('prod-stock').value) || 0;
+  const emoji = document.getElementById('prod-emoji').value || '📦';
+  const alerta = parseInt(document.getElementById('prod-alerta').value) || 5;
+
+  if (!nombre || !precio) { showToast('Completá nombre y precio'); return; }
+
+  STATE.productos.push({ id: Date.now(), nombre, precio, stock, emoji, alerta });
+  await apiPost('/productos', { lista: STATE.productos });
+  renderProductos();
+  closeModal('modal-producto');
+  showToast('Producto agregado ✅', 'green');
+}
+
+// ═══════════════════════════════ WHATSAPP ═══
+
+function generarResumen() {
+  const reservasHoy = STATE.reservas.filter(r => r.fecha === hoy());
+  const totalCanchas = reservasHoy.reduce((s, r) => s + r.precio, 0);
+  const totalBuffet = STATE.ventasBuffet.filter(v => v.fecha === hoy()).reduce((s, v) => s + v.total, 0);
+  const totalDia = totalCanchas + totalBuffet;
+
+  const mp = { efectivo: 0, transferencia: 0, mercadopago: 0, otras: 0 };
+  [...reservasHoy, ...STATE.ventasBuffet.filter(v => v.fecha === hoy())].forEach(item => {
+    const val = item.precio || item.total;
+    if (item.pago === 'efectivo') mp.efectivo += val;
+    else if (item.pago === 'transferencia') mp.transferencia += val;
+    else if (item.pago === 'mercadopago') mp.mercadopago += val;
+    else mp.otras += val;
+  });
+
+  const fecha = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  return `📅 *Resumen del día — ${fecha}*
+
+⚽ Reservas: ${reservasHoy.length}
+🏟️ Ingresos canchas: ${formatPeso(totalCanchas)}
+🥤 Ventas buffet: ${formatPeso(totalBuffet)}
+
+━━━━━━━━━━━━━━
+💵 Efectivo: ${formatPeso(mp.efectivo)}
+🔄 Transferencia: ${formatPeso(mp.transferencia)}
+💙 Mercado Pago: ${formatPeso(mp.mercadopago)}
+📱 Otras billeteras: ${formatPeso(mp.otras)}
+━━━━━━━━━━━━━━
+💰 *Total: ${formatPeso(totalDia)}*`;
+}
+
+function enviarResumenWA() {
+  const texto = generarResumen();
+  const wa = STATE.config.wa || '';
+  const url = `https://wa.me/${wa.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}`;
+  window.open(url, '_blank');
+  closeModal('modal-resumen');
+}
+
+// ═══════════════════════════════ CONFIGURACIÓN ═══
+
+function toggleFeature(feature, value) {
+  STATE.config.features[feature] = value;
+  if (feature === 'buffet') {
+    const buffetNav = document.querySelectorAll('.nav-btn')[3];
+    if (value) {
+      buffetNav.style.display = 'flex';
+    } else {
+      buffetNav.style.display = 'none';
+      // Si está en la página de buffet, volver al dashboard
+      if (STATE.currentPage === 'buffet') {
+        showPage('dashboard', document.querySelectorAll('.nav-btn')[0]);
+      }
+    }
+  }
+  showToast(value ? 'Función activada' : 'Función desactivada');
+}
+
+function cambiarDeporte(deporte) {
+  const iconos = { futbol7: '⚽', futbol5: '⚽', futbol11: '⚽', padel: '🎾', tenis: '🎾' };
+  const nombres = { futbol7: 'Fútbol 7', futbol5: 'Fútbol 5', futbol11: 'Fútbol 11', padel: 'Pádel', tenis: 'Tenis' };
+  STATE.canchas.forEach(c => c.deporte = nombres[deporte]);
+  renderCanchas();
+  showToast(`Deporte cambiado a ${nombres[deporte]}`);
+}
+
+async function guardarConfig() {
+  STATE.config.nombre = document.getElementById('config-nombre').value || STATE.config.nombre;
+  STATE.config.wa = document.getElementById('config-wa').value;
+  STATE.config.nocturnoDesde = document.getElementById('config-nocturno').value;
+  STATE.config.precioDia = parseInt(document.getElementById('config-precio-dia').value) || STATE.config.precioDia;
+
+  // Guardar en Firebase
+  await apiPost('/config', STATE.config);
+  showToast('Configuración guardada ✅', 'green');
+}
+
+// ═══════════════════════════════ MODALES ═══
+
+function openModal(id) {
+  if (id === 'modal-resumen') {
+    document.getElementById('resumen-texto').textContent = generarResumen();
+  }
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ═══════════════════════════════ PAGO ═══
+
+function selectPago(btn, tipo) {
+  STATE.currentPago = tipo;
+  btn.closest('.pago-grid').querySelectorAll('.pago-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function abrirCobro() {
+  openModal('modal-reserva');
+}
+
+// ═══════════════════════════════ TOAST ═══
+
+function showToast(msg, tipo = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${tipo}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════ UTILS ═══
+
+function formatPeso(n) {
+  return '$' + Math.round(n).toLocaleString('es-AR');
+}
+
+function formatFecha(d) {
+  const hoyD = new Date();
+  const mananaD = new Date(); mananaD.setDate(hoyD.getDate() + 1);
+  const ayerD = new Date(); ayerD.setDate(hoyD.getDate() - 1);
+
+  if (d.toDateString() === hoyD.toDateString()) return 'Hoy';
+  if (d.toDateString() === mananaD.toDateString()) return 'Mañana';
+  if (d.toDateString() === ayerD.toDateString()) return 'Ayer';
+  return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function labelPago(p) {
+  const labels = { efectivo: '💵 Efectivo', transferencia: '🔄 Transferencia', mercadopago: '💙 Mercado Pago', otra: '📱 Billetera' };
+  return labels[p] || p;
+}
+
+// ═══════════════════════════════ TAP BRAND + PIN ═══
+
+let tapCount = 0;
+let tapTimer = null;
+let pinValue = '';
+const PIN_CORRECTO = '2580';
+
+function tapBrand() {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 1500);
+
+  if (tapCount >= 5) {
+    tapCount = 0;
+    resetPin();
+    openModal('modal-pin');
+  }
+}
+
+function resetPin() {
+  pinValue = '';
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd-' + i);
+    if (dot) { dot.classList.remove('filled', 'error'); }
+  }
+}
+
+function pinKey(num) {
+  if (pinValue.length >= 4) return;
+  pinValue += String(num);
+  const dot = document.getElementById('pd-' + (pinValue.length - 1));
+  if (dot) dot.classList.add('filled');
+
+  if (pinValue.length === 4) {
+    setTimeout(() => {
+      if (pinValue === PIN_CORRECTO) {
+        closeModal('modal-pin');
+        resetPin();
+        setTimeout(() => openModal('modal-operador'), 200);
+      } else {
+        for (let i = 0; i < 4; i++) {
+          const d = document.getElementById('pd-' + i);
+          if (d) { d.classList.remove('filled'); d.classList.add('error'); }
+        }
+        setTimeout(() => { resetPin(); }, 700);
+        showToast('Código incorrecto');
+      }
+    }, 150);
+  }
+}
+
+function pinDel() {
+  if (pinValue.length === 0) return;
+  const dot = document.getElementById('pd-' + (pinValue.length - 1));
+  if (dot) dot.classList.remove('filled', 'error');
+  pinValue = pinValue.slice(0, -1);
+}
+
+// ═══════════════════════════════ CANCHAS PAQUETES ═══
+
+function selectCanchas(btn, cantidad) {
+  document.querySelectorAll('.canchas-pkg').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const deporte = document.getElementById('op-deporte')?.value || 'futbol7';
+  const nombres = { futbol7: 'Fútbol 7', futbol5: 'Fútbol 5', futbol11: 'Fútbol 11', padel: 'Pádel', tenis: 'Tenis' };
+  const nombreDeporte = nombres[deporte] || 'Deporte';
+
+  // Ajustar array de canchas al nuevo total
+  const actual = STATE.canchas.length;
+  if (cantidad > actual) {
+    for (let i = actual + 1; i <= cantidad; i++) {
+      STATE.canchas.push({
+        id: i,
+        nombre: `Cancha ${i}`,
+        deporte: nombreDeporte,
+        estado: 'libre',
+        precioDia: STATE.config.precioDia || 15000,
+        precioNoche: (STATE.config.precioDia || 15000) * 1.33
+      });
+    }
+  } else if (cantidad < actual) {
+    STATE.canchas = STATE.canchas.slice(0, cantidad);
+  }
+
+  renderCanchas();
+  showToast(`${cantidad} canchas habilitadas`);
+}
+
+// ═══════════════════════════════ LOGIN GOOGLE ═══
+
+function doLoginGoogle() {
+  // En producción: firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())
+  // Por ahora simula el login con Google
+  showToast('Conectando con Google...');
+  setTimeout(() => {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  }, 800);
+}
+
+// ═══════════════════════════════ EDITAR / ELIMINAR PRODUCTO ═══
+
+function abrirEditarProducto(id) {
+  const p = STATE.productos.find(p => p.id === id);
+  if (!p) return;
+
+  document.getElementById('edit-prod-id').value = id;
+  document.getElementById('edit-prod-title').textContent = p.nombre;
+  document.getElementById('edit-prod-nombre').value = p.nombre;
+  document.getElementById('edit-prod-precio').value = p.precio;
+  document.getElementById('edit-prod-stock').value = p.stock;
+  document.getElementById('edit-prod-emoji').value = p.emoji;
+  document.getElementById('edit-prod-alerta').value = p.alerta;
+
+  openModal('modal-editar-producto');
+}
+
+async function guardarEdicionProducto() {
+  const id = parseInt(document.getElementById('edit-prod-id').value);
+  const p = STATE.productos.find(p => p.id === id);
+  if (!p) return;
+
+  p.nombre = document.getElementById('edit-prod-nombre').value.trim() || p.nombre;
+  p.precio = parseInt(document.getElementById('edit-prod-precio').value) || p.precio;
+  p.stock = parseInt(document.getElementById('edit-prod-stock').value) || 0;
+  p.emoji = document.getElementById('edit-prod-emoji').value || p.emoji;
+  p.alerta = parseInt(document.getElementById('edit-prod-alerta').value) || p.alerta;
+
+  await apiPost('/productos', { lista: STATE.productos });
+  renderProductos();
+  closeModal('modal-editar-producto');
+  showToast('Producto actualizado ✅', 'green');
+}
+
+function eliminarProducto() {
+  const id = parseInt(document.getElementById('edit-prod-id').value);
+  const p = STATE.productos.find(p => p.id === id);
+  if (!p) return;
+
+  if (!confirm(`¿Eliminar "${p.nombre}"?`)) return;
+
+  STATE.productos = STATE.productos.filter(p => p.id !== id);
+  delete STATE.carrito[id];
+
+  renderProductos();
+  closeModal('modal-editar-producto');
+  showToast('Producto eliminado');
+}
+
+// ═══════════════════════════════ PREDIOS ═══
+
+function selectPredio(btn, cantidad) {
+  document.querySelectorAll('.predio-pkg').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  STATE.config.predios = cantidad;
+  showToast(`${cantidad} predio${cantidad > 1 ? 's' : ''} habilitado${cantidad > 1 ? 's' : ''}`);
+}
+
+// ═══════════════════════════════ INICIO ═══
+
+// Mostrar/ocultar FAB según página inicial
+document.getElementById('fab-btn').style.display = 'none';
+
+// Setear fecha por defecto en reserva
+window.addEventListener('load', () => {
+  const fechaInput = document.getElementById('res-fecha');
+  if (fechaInput) fechaInput.value = hoy();
+});
+</script>
+</body>
+</html>
 
