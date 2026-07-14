@@ -1804,39 +1804,9 @@ body {
 <script>
 // ═══════════════════════════════ ESTADO GLOBAL ═══
 
-// ── HELPER para fecha de hoy en formato YYYY-MM-DD (necesario antes del STATE) ──
+// ── UTILIDADES (van primero porque todo lo demás las necesita) ──
 function hoy() {
   return new Date().toISOString().slice(0, 10);
-}
-
-const DEMO_RESERVAS = [
-  { id: 1, canchaId: 1, nombre: 'Lucas Martínez', tel: '1155443322', fecha: hoy(), hora: '08:00', duracion: 60, precio: 15000, pago: 'efectivo', estado: 'confirmada' },
-  { id: 2, canchaId: 2, nombre: 'Grupo de Rodrigo', tel: '1144332211', fecha: hoy(), hora: '09:00', duracion: 90, precio: 22500, pago: 'mercadopago', estado: 'confirmada' },
-  { id: 3, canchaId: 1, nombre: 'Diego Fernández', tel: '1166554433', fecha: hoy(), hora: '10:00', duracion: 60, precio: 15000, pago: 'transferencia', estado: 'confirmada' },
-  { id: 4, canchaId: 2, nombre: 'Equipo Los Pibes', tel: '1177665544', fecha: hoy(), hora: '11:30', duracion: 60, precio: 15000, pago: 'efectivo', estado: 'confirmada' },
-  { id: 5, canchaId: 1, nombre: 'Sebastián Torres', tel: '1188776655', fecha: hoy(), hora: '14:00', duracion: 90, precio: 22500, pago: 'efectivo', estado: 'confirmada' },
-  { id: 6, canchaId: 2, nombre: 'Pablo y amigos', tel: '1199887766', fecha: hoy(), hora: '16:00', duracion: 60, precio: 15000, pago: 'mercadopago', estado: 'confirmada' },
-  { id: 7, canchaId: 1, nombre: 'Matías Gómez', tel: '1100998877', fecha: hoy(), hora: '20:00', duracion: 60, precio: 20000, pago: 'efectivo', estado: 'confirmada' },
-  { id: 8, canchaId: 2, nombre: 'Gastón Pérez', tel: '1111009988', fecha: hoy(), hora: '21:00', duracion: 90, precio: 30000, pago: 'transferencia', estado: 'confirmada' },
-];
-
-const DEMO_VENTAS_BUFFET = [
-  { id: 101, items: {}, total: 3500, pago: 'efectivo', fecha: hoy(), hora: '09:15' },
-  { id: 102, items: {}, total: 2400, pago: 'mercadopago', fecha: hoy(), hora: '10:30' },
-  { id: 103, items: {}, total: 1800, pago: 'efectivo', fecha: hoy(), hora: '11:45' },
-  { id: 104, items: {}, total: 4200, pago: 'efectivo', fecha: hoy(), hora: '14:20' },
-  { id: 105, items: {}, total: 2000, pago: 'transferencia', fecha: hoy(), hora: '16:10' },
-];
-
-// Detectar hora actual para estado de canchas
-function estadoCanchaDemo(canchaId) {
-  const ahora = new Date().toTimeString().slice(0,5);
-  const reservasCancha = DEMO_RESERVAS.filter(r => r.canchaId === canchaId && r.fecha === hoy());
-  const activa = reservasCancha.find(r => r.hora <= ahora && ahora < sumarMinutos(r.hora, r.duracion));
-  if (activa) return 'ocupada';
-  const proxima = reservasCancha.find(r => r.hora > ahora);
-  if (proxima) return 'proxima';
-  return 'libre';
 }
 
 function sumarMinutos(hora, mins) {
@@ -1845,14 +1815,47 @@ function sumarMinutos(hora, mins) {
   return String(Math.floor(total/60)).padStart(2,'0') + ':' + String(total%60).padStart(2,'0');
 }
 
+function estadoCanchaDemo(canchaId, reservas) {
+  const ahora = new Date().toTimeString().slice(0,5);
+  const hoyStr = hoy();
+  const reservasCancha = reservas.filter(r => r.canchaId === canchaId && r.fecha === hoyStr);
+  const activa = reservasCancha.find(r => r.hora <= ahora && ahora < sumarMinutos(r.hora, r.duracion));
+  if (activa) return 'ocupada';
+  const proxima = reservasCancha.find(r => r.hora > ahora);
+  if (proxima) return 'proxima';
+  return 'libre';
+}
+
+// ── DATOS DE DEMO ──
+const hoyStr = hoy();
+
+const DEMO_RESERVAS = [
+  { id: 1, canchaId: 1, nombre: 'Lucas Martínez', tel: '1155443322', fecha: hoyStr, hora: '08:00', duracion: 60, precio: 15000, pago: 'efectivo', estado: 'confirmada' },
+  { id: 2, canchaId: 2, nombre: 'Grupo de Rodrigo', tel: '1144332211', fecha: hoyStr, hora: '09:00', duracion: 90, precio: 22500, pago: 'mercadopago', estado: 'confirmada' },
+  { id: 3, canchaId: 1, nombre: 'Diego Fernández', tel: '1166554433', fecha: hoyStr, hora: '10:00', duracion: 60, precio: 15000, pago: 'transferencia', estado: 'confirmada' },
+  { id: 4, canchaId: 2, nombre: 'Equipo Los Pibes', tel: '1177665544', fecha: hoyStr, hora: '11:30', duracion: 60, precio: 15000, pago: 'efectivo', estado: 'confirmada' },
+  { id: 5, canchaId: 1, nombre: 'Sebastián Torres', tel: '1188776655', fecha: hoyStr, hora: '14:00', duracion: 90, precio: 22500, pago: 'efectivo', estado: 'confirmada' },
+  { id: 6, canchaId: 2, nombre: 'Pablo y amigos', tel: '1199887766', fecha: hoyStr, hora: '16:00', duracion: 60, precio: 15000, pago: 'mercadopago', estado: 'confirmada' },
+  { id: 7, canchaId: 1, nombre: 'Matías Gómez', tel: '1100998877', fecha: hoyStr, hora: '20:00', duracion: 60, precio: 20000, pago: 'efectivo', estado: 'confirmada' },
+  { id: 8, canchaId: 2, nombre: 'Gastón Pérez', tel: '1111009988', fecha: hoyStr, hora: '21:00', duracion: 90, precio: 30000, pago: 'transferencia', estado: 'confirmada' },
+];
+
+const DEMO_VENTAS_BUFFET = [
+  { id: 101, items: {}, total: 3500, pago: 'efectivo', fecha: hoyStr, hora: '09:15' },
+  { id: 102, items: {}, total: 2400, pago: 'mercadopago', fecha: hoyStr, hora: '10:30' },
+  { id: 103, items: {}, total: 1800, pago: 'efectivo', fecha: hoyStr, hora: '11:45' },
+  { id: 104, items: {}, total: 4200, pago: 'efectivo', fecha: hoyStr, hora: '14:20' },
+  { id: 105, items: {}, total: 2000, pago: 'transferencia', fecha: hoyStr, hora: '16:10' },
+];
+
 const STATE = {
   currentPage: 'dashboard',
   currentPago: 'efectivo',
   currentCancha: null,
   reservasFecha: new Date(),
   canchas: [
-    { id: 1, nombre: 'Cancha 1', deporte: 'Fútbol 7', estado: estadoCanchaDemo(1), precioDia: 15000, precioNoche: 20000 },
-    { id: 2, nombre: 'Cancha 2', deporte: 'Fútbol 7', estado: estadoCanchaDemo(2), precioDia: 15000, precioNoche: 20000 }
+    { id: 1, nombre: 'Cancha 1', deporte: 'Fútbol 7', estado: estadoCanchaDemo(1, DEMO_RESERVAS), precioDia: 15000, precioNoche: 20000 },
+    { id: 2, nombre: 'Cancha 2', deporte: 'Fútbol 7', estado: estadoCanchaDemo(2, DEMO_RESERVAS), precioDia: 15000, precioNoche: 20000 }
   ],
   reservas: [...DEMO_RESERVAS],
   productos: [
