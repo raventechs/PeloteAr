@@ -1093,6 +1093,117 @@ body {
 .canchas-pkg.active .cp-label { color: var(--green); }
 .canchas-pkg .cp-precio { font-size: 11px; color: var(--text2); margin-top: 5px; font-weight: 600; }
 
+/* ── CIERRE DE CAJA ── */
+.cierre-btn {
+  position: relative;
+  background: linear-gradient(135deg, #1a0a0a, #2a1010);
+  border: 2px solid rgba(239,68,68,0.4);
+  border-radius: var(--r);
+  padding: 20px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.cierre-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(239,68,68,0.08), transparent 70%);
+}
+
+.cierre-btn:active { transform: scale(0.97); }
+
+.cierre-btn-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.cierre-btn-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.cierre-btn-sub {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.historial-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.historial-item:last-child { border-bottom: none; }
+
+.historial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.historial-hora {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.historial-tipo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.historial-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text2);
+  padding: 2px 0;
+}
+
+.historial-row strong { color: var(--text); font-weight: 600; }
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.confirm-overlay.open { display: flex; }
+
+.confirm-box {
+  background: var(--surf1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+  animation: modalIn 0.2s ease;
+}
+
+.confirm-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+.confirm-title { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
+.confirm-sub { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 24px; }
+.confirm-actions { display: flex; gap: 10px; }
+
 /* ── RESUMEN WHATSAPP ── */
 .resumen-preview {
   background: #0B1014;
@@ -1420,6 +1531,84 @@ body {
       </div>
     </div>
 
+    <!-- ══ CAJA ══ -->
+    <div class="page" id="page-caja">
+      <div class="page-head">
+        <div class="page-title">Caja</div>
+        <div class="page-sub">Cierres y backup del día</div>
+      </div>
+
+      <!-- RESUMEN ACTUAL -->
+      <div class="section-title">Estado actual</div>
+      <div class="card" style="margin:0 16px 16px">
+        <div class="card-body">
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">⚽ Alquileres</span>
+            <span class="caja-val green" id="caja-alquileres">$0</span>
+          </div>
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">🥤 Buffet</span>
+            <span class="caja-val green" id="caja-buffet-val">$0</span>
+          </div>
+          <div class="card-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:12px">
+            <span style="font-size:15px;font-weight:700">Total del día</span>
+            <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green)" id="caja-total-dia">$0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDIOS DE PAGO -->
+      <div class="section-title">Por medio de pago</div>
+      <div class="card" style="margin:0 16px 20px">
+        <div class="card-body">
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">💵 Efectivo</span>
+            <span class="caja-val" id="caja-mp-efectivo">$0</span>
+          </div>
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">🔄 Transferencia</span>
+            <span class="caja-val" id="caja-mp-trans">$0</span>
+          </div>
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">💙 Mercado Pago</span>
+            <span class="caja-val" id="caja-mp-mp">$0</span>
+          </div>
+          <div class="card-row">
+            <span style="color:var(--text2);font-size:14px">📱 Otras billeteras</span>
+            <span class="caja-val" id="caja-mp-otras">$0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTÓN CIERRE -->
+      <div style="padding:0 16px 16px">
+        <div class="cierre-btn" onclick="confirmarCierre('parcial')">
+          <span class="cierre-btn-icon">🔒</span>
+          <div class="cierre-btn-title">Cierre parcial de caja</div>
+          <div class="cierre-btn-sub">Registra el estado actual · No resetea nada</div>
+        </div>
+      </div>
+
+      <div style="padding:0 16px 24px">
+        <div class="cierre-btn" onclick="confirmarCierre('final')" style="border-color:rgba(239,68,68,0.6);background:linear-gradient(135deg,#1f0808,#330d0d)">
+          <span class="cierre-btn-icon">🔐</span>
+          <div class="cierre-btn-title">Cierre final del día</div>
+          <div class="cierre-btn-sub">Envía resumen · Hace backup · Registra cierre completo</div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL DE CIERRES -->
+      <div class="section-title">Historial de cierres de hoy</div>
+      <div class="card" style="margin:0 16px 32px" id="historial-cierres">
+        <div class="card-body">
+          <div class="empty" style="padding:20px">
+            <div class="empty-icon">📋</div>
+            <div class="empty-title">Sin cierres registrados</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 
   <!-- BOTTOM NAV -->
@@ -1439,6 +1628,10 @@ body {
     <button class="nav-btn" onclick="showPage('buffet', this)">
       <span class="nav-icon">🥤</span>
       <span class="nav-label">Buffet</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('caja', this)">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Caja</span>
     </button>
     <button class="nav-btn" onclick="showPage('mas', this)">
       <span class="nav-icon">⚙️</span>
@@ -1680,6 +1873,19 @@ body {
     <button class="btn btn-danger" onclick="doLogout()">Cerrar sesión</button>
     <div style="margin-top:10px">
       <button class="btn btn-secondary" onclick="closeModal('modal-perfil')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRMACIÓN CIERRE -->
+<div class="confirm-overlay" id="confirm-cierre">
+  <div class="confirm-box">
+    <span class="confirm-icon" id="confirm-icon">🔒</span>
+    <div class="confirm-title" id="confirm-title">Cierre parcial</div>
+    <div class="confirm-sub" id="confirm-sub">Se va a registrar el estado actual de la caja y enviar el resumen por WhatsApp.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('confirm-cierre').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger" style="flex:1;background:var(--red);color:#fff" id="confirm-ok-btn" onclick="ejecutarCierre()">Confirmar</button>
     </div>
   </div>
 </div>
@@ -1995,6 +2201,7 @@ const STATE = {
   ],
   ventasBuffet: [],  // Se cargan desde Firebase
   carrito: {},
+  historialCierres: [],
   config: {
     nombre: '',
     wa: '',
@@ -2109,6 +2316,10 @@ function showPage(id, btn) {
 
   if (id === 'reservas') renderReservas();
   if (id === 'buffet') renderProductos();
+  if (id === 'caja') {
+    actualizarVistaCaja();
+    renderHistorialCierres();
+  }
 }
 
 function onFabClick() {
@@ -2757,17 +2968,170 @@ function selectPredio(btn, cantidad) {
   showToast(`${cantidad} predio${cantidad > 1 ? 's' : ''} habilitado${cantidad > 1 ? 's' : ''}`);
 }
 
-// ═══════════════════════════════ INICIO ═══
 
-// Mostrar/ocultar FAB según página inicial
-document.getElementById('fab-btn').style.display = 'none';
-window.APP_INITIALIZED = false;
+// ═══════════════════════════════ CIERRE DE CAJA ═══
 
-// Setear fecha por defecto en reserva
-window.addEventListener('load', () => {
-  const fechaInput = document.getElementById('res-fecha');
-  if (fechaInput) fechaInput.value = hoy();
-});
-</script>
-</body>
-</html>
+let TIPO_CIERRE_PENDIENTE = null;
+
+function confirmarCierre(tipo) {
+  TIPO_CIERRE_PENDIENTE = tipo;
+  const esFinal = tipo === 'final';
+
+  document.getElementById('confirm-icon').textContent = esFinal ? '🔐' : '🔒';
+  document.getElementById('confirm-title').textContent = esFinal ? 'Cierre final del día' : 'Cierre parcial de caja';
+  document.getElementById('confirm-sub').textContent = esFinal
+    ? 'Se enviará el resumen por WhatsApp, se registrará el cierre completo y se descargará el backup del día.'
+    : 'Se registrará el estado actual de caja y se enviará el resumen parcial por WhatsApp. El sistema sigue operativo.';
+
+  document.getElementById('confirm-cierre').classList.add('open');
+}
+
+async function ejecutarCierre() {
+  document.getElementById('confirm-cierre').classList.remove('open');
+  const tipo = TIPO_CIERRE_PENDIENTE;
+  const ahora = new Date();
+  const horaStr = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  const fechaStr = hoy();
+  const esFinal = tipo === 'final';
+
+  showToast('Procesando cierre...');
+
+  // Calcular totales
+  const totales = calcularTotalesDia();
+
+  // Armar objeto de cierre
+  const cierre = {
+    tipo,
+    fecha: fechaStr,
+    hora: horaStr,
+    timestamp: ahora.toISOString(),
+    empleado: window.CURRENT_USER?.displayName || 'Empleado',
+    totales,
+    reservas: STATE.reservas.filter(r => r.fecha === fechaStr),
+    ventas: STATE.ventasBuffet.filter(v => v.fecha === fechaStr),
+    productos: STATE.productos
+  };
+
+  // Guardar en Firestore
+  await apiPost('/cierres', cierre);
+
+  // Agregar al historial local
+  STATE.historialCierres = STATE.historialCierres || [];
+  STATE.historialCierres.push(cierre);
+  renderHistorialCierres();
+
+  // Enviar resumen por WhatsApp
+  enviarResumenCierre(cierre);
+
+  // Si es cierre final, hacer backup
+  if (esFinal) {
+    await hacerBackup(cierre);
+    showToast('Cierre final completado ✅', 'green');
+  } else {
+    showToast('Cierre parcial registrado ✅', 'green');
+  }
+
+  // Actualizar vista de caja
+  actualizarVistaCaja();
+}
+
+function calcularTotalesDia() {
+  const fechaStr = hoy();
+  const reservasHoy = STATE.reservas.filter(r => r.fecha === fechaStr);
+  const ventasHoy = STATE.ventasBuffet.filter(v => v.fecha === fechaStr);
+
+  const alquileres = reservasHoy.reduce((s, r) => s + r.precio, 0);
+  const buffet = ventasHoy.reduce((s, v) => s + v.total, 0);
+  const total = alquileres + buffet;
+
+  const mp = { efectivo: 0, transferencia: 0, mercadopago: 0, otras: 0 };
+  [...reservasHoy, ...ventasHoy].forEach(item => {
+    const val = item.precio || item.total || 0;
+    if (item.pago === 'efectivo') mp.efectivo += val;
+    else if (item.pago === 'transferencia') mp.transferencia += val;
+    else if (item.pago === 'mercadopago') mp.mercadopago += val;
+    else mp.otras += val;
+  });
+
+  return { alquileres, buffet, total, mp, cantReservas: reservasHoy.length };
+}
+
+function actualizarVistaCaja() {
+  const t = calcularTotalesDia();
+  document.getElementById('caja-alquileres').textContent = formatPeso(t.alquileres);
+  document.getElementById('caja-buffet-val').textContent = formatPeso(t.buffet);
+  document.getElementById('caja-total-dia').textContent = formatPeso(t.total);
+  document.getElementById('caja-mp-efectivo').textContent = formatPeso(t.mp.efectivo);
+  document.getElementById('caja-mp-trans').textContent = formatPeso(t.mp.transferencia);
+  document.getElementById('caja-mp-mp').textContent = formatPeso(t.mp.mercadopago);
+  document.getElementById('caja-mp-otras').textContent = formatPeso(t.mp.otras);
+}
+
+function renderHistorialCierres() {
+  const lista = STATE.historialCierres || [];
+  const el = document.getElementById('historial-cierres');
+  if (!el) return;
+
+  if (lista.length === 0) {
+    el.innerHTML = '<div class="card-body"><div class="empty" style="padding:20px"><div class="empty-icon">📋</div><div class="empty-title">Sin cierres registrados</div></div></div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="card-body">' + lista.slice().reverse().map(c => `
+    <div class="historial-item">
+      <div class="historial-header">
+        <span class="historial-hora">🕐 ${c.hora}</span>
+        <span class="historial-tipo" style="color:${c.tipo === 'final' ? 'var(--red)' : 'var(--amber)'}">
+          ${c.tipo === 'final' ? '🔐 Final' : '🔒 Parcial'}
+        </span>
+      </div>
+      <div class="historial-row"><span>Por</span><strong>${c.empleado}</strong></div>
+      <div class="historial-row"><span>Alquileres</span><strong>${formatPeso(c.totales.alquileres)}</strong></div>
+      <div class="historial-row"><span>Buffet</span><strong>${formatPeso(c.totales.buffet)}</strong></div>
+      <div class="historial-row"><span>Reservas</span><strong>${c.totales.cantReservas}</strong></div>
+      <div class="historial-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+        <span style="font-weight:700">Total</span>
+        <strong style="color:var(--green)">${formatPeso(c.totales.total)}</strong>
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+function enviarResumenCierre(cierre) {
+  const t = cierre.totales;
+  const esFinal = cierre.tipo === 'final';
+  const fecha = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const texto = `${esFinal ? '🔐' : '🔒'} *Cierre ${esFinal ? 'final' : 'parcial'} de caja*
+📅 ${fecha} — ${cierre.hora}
+👤 ${cierre.empleado}
+
+⚽ Alquileres: ${formatPeso(t.alquileres)}
+🥤 Buffet: ${formatPeso(t.buffet)}
+
+💵 Efectivo: ${formatPeso(t.mp.efectivo)}
+🔄 Transferencia: ${formatPeso(t.mp.transferencia)}
+💙 Mercado Pago: ${formatPeso(t.mp.mercadopago)}
+📱 Otras billeteras: ${formatPeso(t.mp.otras)}
+
+━━━━━━━━━━━━━━
+💰 *Total: ${formatPeso(t.total)}*
+📋 Reservas: ${t.cantReservas}`;
+
+  const wa = STATE.config.wa || '';
+  const url = `https://wa.me/${wa.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}`;
+  window.open(url, '_blank');
+}
+
+async function hacerBackup(cierre) {
+  const fechaStr = hoy();
+  const backup = {
+    version: '1.0',
+    fecha: fechaStr,
+    generadoEn: new Date().toISOString(),
+    complejo: STATE.config.nombre,
+    state: {
+      canchas: STATE.canchas,
+      reservas: STATE.reservas.filter(r => r.fecha === fechaStr),
+      ventasBuffet: STATE.ventasBuffet.filter(v => v.fecha === fechaStr),
+      producto
