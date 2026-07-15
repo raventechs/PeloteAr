@@ -1107,6 +1107,91 @@ body {
   white-space: pre-wrap;
 }
 </style>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCEMzRkk0LEeV4obPUHPvnBhaBM95ZEnCs",
+    authDomain: "pelotear-1f37e.firebaseapp.com",
+    projectId: "pelotear-1f37e",
+    storageBucket: "pelotear-1f37e.firebasestorage.app",
+    messagingSenderId: "822223841367",
+    appId: "1:822223841367:web:f23b1953bfed3d0ef05b12"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Escuchar cambios de sesión
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Usuario logueado — mostrar app
+      window.CURRENT_USER = user;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+
+      // Actualizar avatar con iniciales reales
+      const nombre = user.displayName || 'Usuario';
+      const iniciales = nombre.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+      document.querySelectorAll('.avatar').forEach(a => a.textContent = iniciales);
+
+      // Actualizar perfil modal
+      const nombreEl = document.querySelector('#modal-perfil .modal-title + div + div');
+      if (nombreEl) nombreEl.textContent = nombre;
+
+      if (!window.APP_INITIALIZED) {
+        window.APP_INITIALIZED = true;
+        initApp();
+      }
+    } else {
+      // No logueado — mostrar login
+      window.CURRENT_USER = null;
+      window.APP_INITIALIZED = false;
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+    }
+  });
+
+  // Login con Google
+  window.doLoginGoogle = async function() {
+    try {
+      await signInWithPopup(auth, provider);
+      // onAuthStateChanged se encarga del resto
+    } catch (err) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        showToast('Error al iniciar sesión');
+        console.error(err);
+      }
+    }
+  };
+
+  // Login con email (demo rápida)
+  window.doLogin = function() {
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    if (!user || !pass) { showToast('Completá usuario y contraseña'); return; }
+    // Por ahora acepta cualquier combinación como demo
+    // En producción: firebase signInWithEmailAndPassword
+    window.CURRENT_USER = { displayName: user, email: user };
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    if (!window.APP_INITIALIZED) {
+      window.APP_INITIALIZED = true;
+      initApp();
+    }
+  };
+
+  // Logout
+  window.doLogout = async function() {
+    await signOut(auth);
+    closeModal('modal-perfil');
+    // onAuthStateChanged muestra el login automáticamente
+  };
+</script>
 </head>
 <body>
 
@@ -1588,9 +1673,9 @@ body {
     <div class="modal-title">Mi cuenta</div>
     <div class="modal-sub">Sesión activa</div>
     <div style="text-align:center;margin-bottom:24px">
-      <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--green),#00875A);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin:0 auto 12px">JR</div>
-      <div style="font-size:17px;font-weight:700">Juan Rodríguez</div>
-      <div style="font-size:13px;color:var(--text2);margin-top:4px">Administrador</div>
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--green),#00875A);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin:0 auto 12px" id="perfil-avatar">JR</div>
+      <div style="font-size:17px;font-weight:700" id="perfil-nombre">Usuario</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px" id="perfil-email">-</div>
     </div>
     <button class="btn btn-danger" onclick="doLogout()">Cerrar sesión</button>
     <div style="margin-top:10px">
@@ -1922,16 +2007,22 @@ const STATE = {
 
 // ═══════════════════════════════ LOGIN ═══
 
+// Login y logout manejados por Firebase Auth (ver bloque <script type="module"> en el head)
 function doLogin() {
-  const user = document.getElementById('loginUser').value;
-  const pass = document.getElementById('loginPass').value;
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
   if (!user || !pass) { showToast('Completá usuario y contraseña'); return; }
+  window.CURRENT_USER = { displayName: user, email: user };
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  initApp();
+  if (!window.APP_INITIALIZED) {
+    window.APP_INITIALIZED = true;
+    initApp();
+  }
 }
 
 function doLogout() {
+  if (window.doLogout._firebase) return; // manejado por Firebase
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUser').value = '';
@@ -2449,6 +2540,17 @@ function openModal(id) {
   if (id === 'modal-resumen') {
     document.getElementById('resumen-texto').textContent = generarResumen();
   }
+  if (id === 'modal-perfil' && window.CURRENT_USER) {
+    const user = window.CURRENT_USER;
+    const nombre = user.displayName || user.email || 'Usuario';
+    const iniciales = nombre.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+    const avatarEl = document.getElementById('perfil-avatar');
+    const nombreEl = document.getElementById('perfil-nombre');
+    const emailEl = document.getElementById('perfil-email');
+    if (avatarEl) avatarEl.textContent = iniciales;
+    if (nombreEl) nombreEl.textContent = nombre;
+    if (emailEl) emailEl.textContent = user.email || '';
+  }
   document.getElementById(id).classList.add('open');
 }
 
@@ -2595,16 +2697,7 @@ function selectCanchas(btn, cantidad) {
 
 // ═══════════════════════════════ LOGIN GOOGLE ═══
 
-function doLoginGoogle() {
-  // En producción: firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())
-  // Por ahora simula el login con Google
-  showToast('Conectando con Google...');
-  setTimeout(() => {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    initApp();
-  }, 800);
-}
+// doLoginGoogle manejado por Firebase Auth en el head
 
 // ═══════════════════════════════ EDITAR / ELIMINAR PRODUCTO ═══
 
@@ -2668,6 +2761,7 @@ function selectPredio(btn, cantidad) {
 
 // Mostrar/ocultar FAB según página inicial
 document.getElementById('fab-btn').style.display = 'none';
+window.APP_INITIALIZED = false;
 
 // Setear fecha por defecto en reserva
 window.addEventListener('load', () => {
