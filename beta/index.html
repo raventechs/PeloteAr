@@ -1383,6 +1383,53 @@ body {
   font-weight: 700;
 }
 
+/* ── HISTORIAL ── */
+.historial-fecha-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+.hist-tab-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 14px;
+}
+
+.hist-tab {
+  flex: 1;
+  padding: 9px;
+  text-align: center;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--surf2);
+  color: var(--text2);
+  transition: all 0.15s;
+}
+
+.hist-tab.active {
+  background: var(--green-d);
+  border-color: rgba(0,194,124,0.3);
+  color: var(--green);
+}
+
+.hist-resumen-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.hist-resumen-row:last-child { border-bottom: none; }
+.hist-resumen-label { font-size: 13px; color: var(--text2); }
+.hist-resumen-val { font-size: 15px; font-weight: 700; color: var(--text); font-family: "DM Mono", monospace; }
+.hist-resumen-val.green { color: var(--green); }
+
 /* ── RESUMEN WHATSAPP ── */
 .resumen-preview {
   background: #0B1014;
@@ -1606,6 +1653,35 @@ body {
       <div style="height: 80px"></div>
     </div>
 
+    <!-- ══ HISTORIAL ══ -->
+    <div class="page" id="page-historial">
+      <div class="page-head">
+        <div class="page-title">Historial</div>
+        <div class="page-sub" id="hist-fecha-label">Cargando...</div>
+      </div>
+
+      <!-- NAV FECHA -->
+      <div class="historial-fecha-nav">
+        <button class="btn btn-secondary btn-sm" onclick="cambiarFechaHist(-1)">‹</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="irHoyHist()">Hoy</button>
+        <button class="btn btn-secondary btn-sm" onclick="cambiarFechaHist(1)">›</button>
+      </div>
+
+      <!-- TABS -->
+      <div class="hist-tab-row">
+        <div class="hist-tab active" id="hist-tab-alq" onclick="switchHistTab('alquileres')">⚽ Alquileres</div>
+        <div class="hist-tab" id="hist-tab-buf" onclick="switchHistTab('buffet')">🥤 Buffet</div>
+        <div class="hist-tab" id="hist-tab-res" onclick="switchHistTab('resumen')">💰 Resumen</div>
+      </div>
+
+      <!-- CONTENIDO -->
+      <div id="hist-content" style="margin: 0 16px 32px">
+        <div class="card">
+          <div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Cargando...</div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ MÁS (Config) ══ -->
     <div class="page" id="page-mas">
       <div class="page-head">
@@ -1756,6 +1832,10 @@ body {
     <button class="nav-btn" onclick="showPage('caja', this)">
       <span class="nav-icon">💰</span>
       <span class="nav-label">Caja</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('historial', this)">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Historial</span>
     </button>
     <button class="nav-btn" onclick="showPage('mas', this)">
       <span class="nav-icon">⚙️</span>
@@ -2451,6 +2531,10 @@ function showPage(id, btn) {
   if (id === 'caja') {
     actualizarVistaCaja();
     renderHistorialCierres();
+  }
+  if (id === 'historial') {
+    histFecha = new Date();
+    renderHistorial();
   }
 }
 
@@ -3369,35 +3453,52 @@ function recuperarStateCache() {
 // Sincronizar cola cuando vuelve internet
 async function sincronizarCola() {
   const cola = await obtenerCola();
-  if (cola.length === 0) return;
+  if (cola.length === 0) {
+    pendingCount = 0;
+    ocultarSyncBar();
+    return;
+  }
 
   mostrarSyncBar('syncing', `Sincronizando ${cola.length} registro${cola.length > 1 ? 's' : ''}...`);
+
+  // Verificar conectividad real antes de intentar
+  try {
+    await fetch('https://botpanel-production-c941.up.railway.app/', { 
+      method: 'GET',
+      signal: AbortSignal.timeout(5000)
+    });
+  } catch (e) {
+    mostrarSyncBar('offline', `Sin conexión · ${cola.length} pendientes`);
+    return;
+  }
 
   let exitos = 0;
   for (const op of cola) {
     try {
-      const res = await fetch(API + op.path, {
+      const res = await fetch('https://botpanel-production-c941.up.railway.app/api/pelotear' + op.path, {
         method: op.method || 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(op.body)
+        body: JSON.stringify(op.body),
+        signal: AbortSignal.timeout(8000)
       });
       if (res.ok) {
         await eliminarDeCola(op.id);
         exitos++;
       }
     } catch (e) {
-      // Sigue sin conexión, dejar en cola
-      break;
+      console.warn('Error sincronizando op:', op.path, e.message);
+      // Continuar con el siguiente en lugar de romper todo
     }
   }
 
-  pendingCount = Math.max(0, pendingCount - exitos);
+  pendingCount = Math.max(0, cola.length - exitos);
 
-  if (exitos === cola.length) {
-    mostrarSyncBar('synced', 'Sincronizado ✓');
+  if (pendingCount === 0) {
+    mostrarSyncBar('synced', '✓ Todo sincronizado');
     setTimeout(() => ocultarSyncBar(), 3000);
+    updateDashboard();
   } else {
-    mostrarSyncBar('offline', `Sin conexión · ${pendingCount} pendientes`);
+    mostrarSyncBar('offline', `${pendingCount} registro${pendingCount > 1 ? 's' : ''} pendiente${pendingCount > 1 ? 's' : ''}`);
   }
 }
 
@@ -3657,6 +3758,196 @@ async function hacerBackup(cierre) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+
+// ═══════════════════════════════ HISTORIAL ═══
+
+let histFecha = new Date();
+let histTab = 'alquileres';
+
+function cambiarFechaHist(delta) {
+  histFecha = new Date(histFecha);
+  histFecha.setDate(histFecha.getDate() + delta);
+  renderHistorial();
+}
+
+function irHoyHist() {
+  histFecha = new Date();
+  renderHistorial();
+}
+
+function switchHistTab(tab) {
+  histTab = tab;
+  document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`hist-tab-${tab === 'alquileres' ? 'alq' : tab === 'buffet' ? 'buf' : 'res'}`).classList.add('active');
+  renderHistorial();
+}
+
+async function renderHistorial() {
+  const fechaStr = histFecha.toISOString().slice(0, 10);
+  const label = document.getElementById('hist-fecha-label');
+  if (label) label.textContent = formatFecha(histFecha);
+
+  const content = document.getElementById('hist-content');
+  if (!content) return;
+
+  // Buscar en state primero, luego en Firebase si es fecha pasada
+  let reservas = STATE.reservas.filter(r => r.fecha === fechaStr);
+  let ventas = STATE.ventasBuffet.filter(v => v.fecha === fechaStr);
+
+  // Si es fecha pasada y no hay datos locales, buscar en Firebase
+  if (fechaStr !== hoy() && (reservas.length === 0 && ventas.length === 0)) {
+    content.innerHTML = '<div class="card"><div class="empty"><div class="empty-icon">🔄</div><div class="empty-title">Cargando...</div></div></div>';
+    try {
+      const [resData, venData] = await Promise.all([
+        apiGet('/reservas/' + fechaStr),
+        apiGet('/ventas/' + fechaStr)
+      ]);
+      if (resData) reservas = resData;
+      if (venData) ventas = venData;
+    } catch(e) {
+      console.warn('Error cargando historial:', e);
+    }
+  }
+
+  if (histTab === 'alquileres') {
+    renderHistAlquileres(reservas, content);
+  } else if (histTab === 'buffet') {
+    renderHistBuffet(ventas, content);
+  } else {
+    renderHistResumen(reservas, ventas, content);
+  }
+}
+
+function renderHistAlquileres(reservas, container) {
+  if (reservas.length === 0) {
+    container.innerHTML = '<div class="card"><div class="empty"><div class="empty-icon">⚽</div><div class="empty-title">Sin alquileres este día</div></div></div>';
+    return;
+  }
+
+  const sorted = [...reservas].sort((a,b) => a.hora.localeCompare(b.hora));
+  const total = reservas.reduce((s,r) => s + (r.precio || 0), 0);
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-body">
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">Total alquileres</span>
+          <span class="hist-resumen-val green">${formatPeso(total)}</span>
+        </div>
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">Cantidad de reservas</span>
+          <span class="hist-resumen-val">${reservas.length}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      ${sorted.map(r => {
+        const c = STATE.canchas.find(c => c.id === r.canchaId);
+        return `<div class="reserva-item">
+          <div class="reserva-hora">${r.hora}</div>
+          <div class="reserva-info">
+            <div class="reserva-nombre">${r.nombre}</div>
+            <div class="reserva-detalle">${c?.nombre || 'Cancha'} · ${r.duracion} min</div>
+          </div>
+          <div>
+            <div class="reserva-precio">${formatPeso(r.precio || 0)}</div>
+            <div class="reserva-pago">${labelPago(r.pago)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderHistBuffet(ventas, container) {
+  if (ventas.length === 0) {
+    container.innerHTML = '<div class="card"><div class="empty"><div class="empty-icon">🥤</div><div class="empty-title">Sin ventas este día</div></div></div>';
+    return;
+  }
+
+  const sorted = [...ventas].sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
+  const total = ventas.reduce((s,v) => s + (v.total || 0), 0);
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-body">
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">Total buffet</span>
+          <span class="hist-resumen-val green">${formatPeso(total)}</span>
+        </div>
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">Cantidad de ventas</span>
+          <span class="hist-resumen-val">${ventas.length}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      ${sorted.map(v => `
+        <div class="reserva-item">
+          <div class="reserva-hora">${v.hora || '--:--'}</div>
+          <div class="reserva-info">
+            <div class="reserva-nombre">Venta buffet</div>
+            <div class="reserva-detalle">${labelPago(v.pago)}</div>
+          </div>
+          <div>
+            <div class="reserva-precio">${formatPeso(v.total || 0)}</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderHistResumen(reservas, ventas, container) {
+  const totalAlq = reservas.reduce((s,r) => s + (r.precio||0), 0);
+  const totalBuf = ventas.reduce((s,v) => s + (v.total||0), 0);
+  const total = totalAlq + totalBuf;
+
+  const mp = { efectivo:0, transferencia:0, mercadopago:0, otras:0 };
+  [...reservas, ...ventas].forEach(item => {
+    const val = item.precio || item.total || 0;
+    if (item.pago === 'efectivo') mp.efectivo += val;
+    else if (item.pago === 'transferencia') mp.transferencia += val;
+    else if (item.pago === 'mercadopago') mp.mercadopago += val;
+    else mp.otras += val;
+  });
+
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-body">
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">⚽ Alquileres</span>
+          <span class="hist-resumen-val">${formatPeso(totalAlq)}</span>
+        </div>
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">🥤 Buffet</span>
+          <span class="hist-resumen-val">${formatPeso(totalBuf)}</span>
+        </div>
+        <div class="hist-resumen-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:12px">
+          <span style="font-size:15px;font-weight:700">Total del día</span>
+          <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green)">${formatPeso(total)}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">💵 Efectivo</span>
+          <span class="hist-resumen-val">${formatPeso(mp.efectivo)}</span>
+        </div>
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">🔄 Transferencia</span>
+          <span class="hist-resumen-val">${formatPeso(mp.transferencia)}</span>
+        </div>
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">💙 Mercado Pago</span>
+          <span class="hist-resumen-val">${formatPeso(mp.mercadopago)}</span>
+        </div>
+        <div class="hist-resumen-row">
+          <span class="hist-resumen-label">📱 Otras billeteras</span>
+          <span class="hist-resumen-val">${formatPeso(mp.otras)}</span>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════ INICIO ═══
