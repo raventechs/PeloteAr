@@ -3084,8 +3084,8 @@ function tapBrand() {
 
   if (tapCount >= 5) {
     tapCount = 0;
-    resetPin();
-    openModal('modal-pin');
+    /* Menú oculto sin PIN: abre directo solo con la cuenta admin (lo respaldan las reglas de Firestore) */
+    if (window.rtIsAdmin && window.rtIsAdmin()) openModal('modal-operador');
   }
 }
 
