@@ -1508,11 +1508,11 @@ var __rtPWA = (function() {
 <!-- ═══════════════════════════════ LOGIN ═══ -->
 <div id="loginScreen" class="login-screen">
   <div class="login-logo">⚽</div>
-  <div class="login-title">Complejo Deportivo</div>
+  <div class="login-title">PeloteAR</div>
   <div class="login-sub">Ingresá para continuar</div>
   <div class="login-form">
     <div class="form-group">
-      <label class="form-label">Usuario</label>
+      <label class="form-label">Email</label>
       <input class="form-input" id="loginUser" type="text" placeholder="tu@email.com" autocomplete="off">
     </div>
     <div class="form-group">
@@ -1533,7 +1533,7 @@ var __rtPWA = (function() {
 
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="topbar-brand" onclick="tapBrand()" id="brand-tap" style="cursor:default;user-select:none">Complejo <span>Los Pinos</span></div>
+    <div class="topbar-brand" onclick="tapBrand()" id="brand-tap" style="cursor:default;user-select:none">Mi <span>Complejo</span></div>
     <div class="topbar-right">
       <div class="topbar-time" id="topbarTime">00:00</div>
       <div class="avatar" onclick="openModal('modal-perfil')">JR</div>
@@ -1729,6 +1729,38 @@ var __rtPWA = (function() {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- MODO PRÁCTICA -->
+      <div class="config-section">
+        <div class="config-title">🎓 Modo Práctica</div>
+        <div class="card"><div class="card-body">
+          <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5">Carga reservas y ventas de buffet de ejemplo (hoy y mañana) para aprender o mostrar la app. Quedan marcadas y se quitan con un botón; tus datos reales no se tocan.</div>
+          <button class="btn btn-primary" onclick="cargarPractica()" style="margin-bottom:8px">🎓 Cargar datos de práctica</button>
+          <button class="btn btn-secondary" onclick="quitarPractica()">🧹 Quitar datos de práctica</button>
+          <div id="practicaMsg" style="font-size:12px;color:var(--text2);margin-top:8px"></div>
+        </div></div>
+      </div>
+
+      <!-- BACKUP -->
+      <div class="config-section">
+        <div class="config-title">💾 Copia de seguridad</div>
+        <div class="card"><div class="card-body">
+          <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5">La app guarda sola una copia una vez por día al abrirla. También podés hacerla cuando quieras.</div>
+          <button class="btn btn-primary" onclick="descargarBackup(false)" style="margin-bottom:8px">⬇️ Descargar backup</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('inputRestore').click()">⬆️ Restaurar backup</button>
+          <input type="file" id="inputRestore" accept=".json" style="display:none" onchange="restaurarBackup(this)">
+          <div style="font-size:12px;color:var(--text2);margin-top:8px">Último backup: <span id="ultimoBackup">—</span></div>
+        </div></div>
+      </div>
+
+      <!-- INSTRUCTIVO -->
+      <div class="config-section">
+        <div class="config-title">❓ Instructivo</div>
+        <div class="card"><div class="card-body">
+          <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Guía paso a paso de cómo usar la app, con preguntas frecuentes.</div>
+          <a href="ayuda/" target="_blank" rel="noopener" style="display:block;text-align:center;padding:12px;border-radius:12px;background:#25D366;color:#fff;font-weight:700;text-decoration:none">📖 Abrir instructivo</a>
+        </div></div>
       </div>
 
       <div style="padding:0 16px 32px">
@@ -2246,6 +2278,10 @@ var __rtPWA = (function() {
       </div>
     </div>
 
+    <div style="margin:18px 0 10px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px">👥 Clientes y prueba gratis</div>
+      <div id="rtAdmClientes" style="max-height:260px;overflow:auto;font-size:13px">Cargando…</div>
+    </div>
     <button class="btn btn-primary" onclick="closeModal('modal-operador')">Cerrar panel</button>
   </div>
 </div>
@@ -2301,42 +2337,59 @@ var __rtPWA = (function() {
 <script>
 // ═══════════════════════════════ API FIREBASE ═══
 
-const API = 'https://botpanel-production-c941.up.railway.app/api/pelotear';
+/* v2: los datos de cada dueño viven en Firestore: usuarios/{uid}/(datos|reservas|ventas|cierres|backups).
+   Antes iban a un servidor externo sin cuentas; ya no se usa. Funciona sin conexión (se sincroniza al volver). */
+function _pRef() {
+  var u = window.CURRENT_USER;
+  if (!u || !u.uid || typeof dbPelotear === 'undefined') return null;
+  return dbPelotear.collection('usuarios').doc(u.uid);
+}
+function _pLimpio(o) { return JSON.parse(JSON.stringify(o)); }
+function _pErr(origen, e) { try { console.warn(origen, e && e.message); logError(origen, (e && e.message) || String(e)); } catch (_) {} }
 
 async function apiGet(path) {
+  var r = _pRef(); if (!r) return null;
   try {
-    const res = await fetch(API + path);
-    const data = await res.json();
-    return data.ok ? data.data : null;
-  } catch (e) {
-    console.warn('API sin conexión, usando datos locales');
-    return null;
-  }
+    if (path === '/config') { var d = await r.collection('datos').doc('config').get(); return d.exists ? d.data() : null; }
+    if (path === '/productos') { var d2 = await r.collection('datos').doc('productos').get(); return d2.exists ? (d2.data().lista || null) : null; }
+    if (path.indexOf('/reservas/') === 0) {
+      var f = path.slice(10);
+      var s1 = await r.collection('reservas').where('fecha', '>=', f).get();
+      return s1.docs.map(function (x) { return Object.assign({}, x.data(), { id: x.id }); });
+    }
+    if (path.indexOf('/ventas/') === 0) {
+      var f2 = path.slice(8);
+      var s2 = await r.collection('ventas').where('fecha', '==', f2).get();
+      return s2.docs.map(function (x) { return Object.assign({}, x.data(), { id: x.id }); });
+    }
+    if (path === '/cierres') {
+      var s3 = await r.collection('cierres').orderBy('timestamp', 'desc').limit(30).get();
+      return s3.docs.map(function (x) { return x.data(); }).reverse();
+    }
+  } catch (e) { _pErr('apiGet' + path, e); }
+  return null;
 }
 
 async function apiPost(path, body) {
+  var r = _pRef(); if (!r) return null;
   try {
-    const res = await fetch(API + path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    return data.ok ? data : null;
-  } catch (e) {
-    console.warn('API sin conexión');
-    return null;
-  }
+    var data = _pLimpio(body);
+    if (path === '/config') { r.collection('datos').doc('config').set(data, { merge: true }).catch(function (e) { _pErr('postConfig', e); }); return { ok: true }; }
+    if (path === '/productos') { r.collection('datos').doc('productos').set({ lista: data.lista || [] }).catch(function (e) { _pErr('postProductos', e); }); return { ok: true }; }
+    var colName = { '/reservas': 'reservas', '/ventas': 'ventas', '/cierres': 'cierres' }[path];
+    if (colName) { var ref = r.collection(colName).doc(); ref.set(data).catch(function (e) { _pErr('post' + path, e); }); return { ok: true, id: ref.id }; }
+    if (path === '/backup') { r.collection('backups').doc(String(body.fecha)).set(data).catch(function (e) { _pErr('postBackup', e); }); return { ok: true }; }
+  } catch (e) { _pErr('apiPost' + path, e); }
+  return null;
 }
 
 async function apiDelete(path) {
+  var r = _pRef(); if (!r) return false;
   try {
-    const res = await fetch(API + path, { method: 'DELETE' });
-    const data = await res.json();
-    return data.ok;
-  } catch (e) {
-    return false;
-  }
+    var m = path.match(/^\/(reservas|ventas)\/(.+)$/);
+    if (m) { await r.collection(m[1]).doc(m[2]).delete(); return true; }
+  } catch (e) { _pErr('apiDelete', e); }
+  return false;
 }
 
 // ═══════════════════════════════ ESTADO GLOBAL ═══
@@ -2424,16 +2477,14 @@ const STATE = {
 
 // ═══════════════════════════════ LOGIN ═══
 
-function doLogin() {
+async function doLogin() {
   const user = document.getElementById('loginUser').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-  if (!user || !pass) { showToast('Completá usuario y contraseña'); return; }
-  window.CURRENT_USER = { displayName: user, email: user };
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  if (!window.APP_INITIALIZED) {
-    window.APP_INITIALIZED = true;
-    initApp();
+  const pass = document.getElementById('loginPass').value;
+  if (!user || !pass) { showToast('Completá email y contraseña'); return; }
+  try {
+    await fbAuth.signInWithEmailAndPassword(user, pass);
+  } catch (err) {
+    showToast('Email o contraseña incorrectos');
   }
 }
 
@@ -2488,6 +2539,9 @@ async function initApp() {
       renderCanchas();
       renderReservas();
     }
+
+    const cierresPrev = await apiGet('/cierres');
+    if (cierresPrev && cierresPrev.length) { STATE.historialCierres = cierresPrev; try { renderHistorialCierres(); } catch (_) {} }
 
     const ventas = await apiGet('/ventas/' + hoy());
     if (ventas && ventas.length > 0) {
@@ -3085,7 +3139,7 @@ function tapBrand() {
   if (tapCount >= 5) {
     tapCount = 0;
     /* Menú oculto sin PIN: abre directo solo con la cuenta admin (lo respaldan las reglas de Firestore) */
-    if (window.rtIsAdmin && window.rtIsAdmin()) openModal('modal-operador');
+    if (window.rtIsAdmin && window.rtIsAdmin()) { openModal('modal-operador'); try { rtAdmClientes(); } catch (_) {} }
   }
 }
 
@@ -3531,6 +3585,7 @@ window.addEventListener('load', () => {
 <!-- Firebase SDK compat — va al final para que el script principal ya esté cargado -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCEMzRkk0LEeV4obPUHPvnBhaBM95ZEnCs",
@@ -3553,6 +3608,7 @@ window.addEventListener('load', () => {
       document.querySelectorAll('.avatar').forEach(function(a){ a.textContent = iniciales; });
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
+      rtRegistro(user);
       if (!window.APP_INITIALIZED) {
         window.APP_INITIALIZED = true;
         initApp();
@@ -3567,6 +3623,7 @@ window.addEventListener('load', () => {
 
   // P5: Log de errores en Firestore
   var dbPelotear = firebase.firestore();
+  try { dbPelotear.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (_) {}
   function logError(origen, mensaje, extra) {
     try {
       dbPelotear.collection('errores').add({
@@ -3577,6 +3634,158 @@ window.addEventListener('load', () => {
       });
     } catch(e) { console.error('logError falló:', e.message); }
   }
+
+
+  /* ══ REGISTRO + PRUEBA GRATIS 14 DÍAS ══
+     demoHasta = fin de la prueba; null = cliente real (lo pasa el admin con un botón); sin campo = cuenta nueva o anterior: la prueba arranca hoy. */
+  var RT_ADMIN_MAIL = 'rgaraventa@gmail.com';
+  function rtSoyAdmin(u) { return !!(u && u.email === RT_ADMIN_MAIL && u.emailVerified) || !!(window.rtIsAdmin && window.rtIsAdmin()); }
+  function rtDemoCartel(dias) {
+    if (document.getElementById('rtDemoCartel')) { document.getElementById('rtDemoCartel').remove(); }
+    var urgente = dias <= 3, b = document.createElement('a');
+    b.id = 'rtDemoCartel'; b.href = 'https://wa.me/5491136547592?text=' + encodeURIComponent('Hola RavenTechs, quiero activar mi cuenta de PeloteAR'); b.target = '_blank';
+    b.textContent = '🎓 Prueba gratis: ' + (dias === 1 ? 'te queda 1 día' : 'te quedan ' + dias + ' días') + ' · Activar mi cuenta';
+    b.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);left:50%;transform:translateX(-50%);z-index:9000;padding:5px 14px;border-radius:99px;font:600 12px system-ui,sans-serif;text-decoration:none;color:#fff;white-space:nowrap;background:' + (urgente ? '#dc2626' : '#2563eb') + (urgente ? ';animation:rtDemoBlink 1.2s infinite' : '');
+    if (!document.getElementById('rtDemoSt')) { var st = document.createElement('style'); st.id = 'rtDemoSt'; st.textContent = '@keyframes rtDemoBlink{50%{opacity:.55}}'; document.head.appendChild(st); }
+    document.body.appendChild(b);
+  }
+  function rtDemoVencida() {
+    if (document.getElementById('rtDemoLock')) return;
+    var d = document.createElement('div'); d.id = 'rtDemoLock';
+    d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;text-align:center;font-family:system-ui,sans-serif;background:#0b0f14;color:#fff';
+    d.innerHTML = '<div style="font-size:56px;margin-bottom:12px">🔒</div><h2 style="margin-bottom:12px;">Terminó tu prueba gratis</h2><p style="color:#9aa;margin-bottom:20px;max-width:320px;line-height:1.6">Tus 14 días de prueba terminaron. Tus datos están guardados y no se perdió nada. Activá tu cuenta para seguir usando PeloteAR.</p><a href="https://wa.me/5491136547592?text=' + encodeURIComponent('Hola RavenTechs, quiero activar mi cuenta de PeloteAR') + '" target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;margin-bottom:12px;">Activar mi cuenta por WhatsApp</a><button id="rtDemoOut" style="background:none;border:1px solid #556;border-radius:8px;padding:10px 18px;color:#9aa;cursor:pointer;">Cerrar sesión</button>';
+    document.body.appendChild(d);
+    document.getElementById('rtDemoOut').onclick = function () { fbAuth.signOut().then(function () { location.reload(); }).catch(function () { location.reload(); }); };
+  }
+  async function rtRegistro(user) {
+    try {
+      var ru = dbPelotear.collection('usuarios').doc(user.uid);
+      var rs = await ru.get(), rd = rs.exists ? rs.data() : {};
+      var base = { email: user.email || '', nombre: user.displayName || '', alta: (user.metadata && user.metadata.creationTime) || '', ultimoAcceso: firebase.firestore.FieldValue.serverTimestamp(), app: 'PeloteAR' };
+      var dm = (rd.demoHasta === undefined) ? undefined : (rd.demoHasta === null ? null : (rd.demoHasta.toMillis ? rd.demoHasta.toMillis() : null));
+      if (dm === undefined && !rtSoyAdmin(user)) {
+        var h = firebase.firestore.Timestamp.fromMillis(Date.now() + 14 * 86400000);
+        try { await ru.set(Object.assign({}, base, { demoHasta: h }), { merge: true }); dm = h.toMillis(); } catch (_) { dm = null; }
+      } else {
+        ru.set(base, { merge: true }).catch(function () {});
+      }
+      if (!rtSoyAdmin(user) && dm) {
+        var dias = Math.ceil((dm - Date.now()) / 86400000);
+        if (dias <= 0) rtDemoVencida(); else rtDemoCartel(dias);
+      }
+    } catch (e) { console.warn('registro', e && e.message); }
+  }
+
+  /* Menú admin: clientes y prueba gratis (solo botones). Las reglas ya limitan esto a la cuenta admin. */
+  async function rtAdmClientes() {
+    var cont = document.getElementById('rtAdmClientes'); if (!cont) return;
+    try {
+      var snap = await dbPelotear.collection('usuarios').get(); var ahora = Date.now(); var h = '';
+      snap.docs.forEach(function (d) {
+        var u = d.data(); if (u.app && u.app !== 'PeloteAR') return;
+        var est, col;
+        if (u.demoHasta === null) { est = '✅ Cliente'; col = '#27ae60'; }
+        else if (u.demoHasta && u.demoHasta.toMillis) { var r = u.demoHasta.toMillis() - ahora; if (r > 0) { est = '🎓 Prueba: ' + Math.ceil(r / 86400000) + ' d'; col = '#e6a100'; } else { est = '🔒 Vencida'; col = '#e74c3c'; } }
+        else { est = '🕓 Sin fecha (arranca al ingresar)'; col = '#888'; }
+        var em = (u.email || d.id).replace(/</g, '&lt;');
+        h += '<div style="border:1px solid #4443;border-radius:10px;padding:8px;margin-bottom:6px"><div style="font-weight:600;word-break:break-all">' + em + '</div><div style="color:' + col + ';margin:2px 0 6px">' + est + '</div>'
+          + '<button onclick="rtAdmSet(\'' + d.id + '\',\'cliente\')" style="padding:6px 10px;border-radius:8px;border:1px solid #27ae60;background:#27ae6022;color:#27ae60;margin-right:4px">✅ Pasar a cliente</button>'
+          + '<button onclick="rtAdmSet(\'' + d.id + '\',7)" style="padding:6px 10px;border-radius:8px;border:1px solid #2563eb;background:#2563eb22;color:#60a5fa;margin-right:4px">+7 días</button>'
+          + '<button onclick="rtAdmSet(\'' + d.id + '\',30)" style="padding:6px 10px;border-radius:8px;border:1px solid #2563eb;background:#2563eb22;color:#60a5fa">+30 días</button></div>';
+      });
+      cont.innerHTML = h || 'No hay clientes registrados todavía.';
+    } catch (e) { cont.textContent = 'No se pudo cargar la lista.'; }
+  }
+  window.rtAdmSet = async function (uid, acc) {
+    try {
+      var ref = dbPelotear.collection('usuarios').doc(uid);
+      if (acc === 'cliente') { if (!confirm('¿Pasar este complejo a cliente real?')) return; await ref.update({ demoHasta: null }); showToast('Cliente activado'); }
+      else { var sn = await ref.get(); var u = sn.data() || {}; var base = (u.demoHasta && u.demoHasta.toMillis) ? Math.max(u.demoHasta.toMillis(), Date.now()) : Date.now();
+        await ref.update({ demoHasta: firebase.firestore.Timestamp.fromMillis(base + acc * 86400000) }); showToast('Prueba extendida ' + acc + ' días'); }
+      rtAdmClientes();
+    } catch (e) { showToast('No se pudo actualizar'); }
+  };
+  window.rtAdmClientes = rtAdmClientes;
+  try { var _ub = localStorage.getItem('pelotear-ultimo-backup'); if (_ub) setTimeout(function () { var e = document.getElementById('ultimoBackup'); if (e) e.textContent = _ub; }, 500); } catch (_) {}
+
+  /* ══ MODO PRÁCTICA: reservas y ventas de ejemplo marcadas _demo:true. Nunca toca datos reales. ══ */
+  window.cargarPractica = async function () {
+    var r = _pRef(); var M = document.getElementById('practicaMsg'); if (!r) { showToast('Iniciá sesión primero'); return; }
+    try {
+      var fh = hoy(), man = (function () { var d = new Date(); d.setDate(d.getDate() + 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })();
+      var cn = STATE.canchas.map(function (c) { return c.id; }); var c1 = cn[0] || 1, c2 = cn[1] || c1;
+      var res = [
+        [c1, 'Lucas Martínez', '08:00', 60, 15000, 'efectivo', fh], [c2, 'Grupo de Rodrigo', '09:00', 90, 22500, 'mercadopago', fh],
+        [c1, 'Diego Fernández', '10:00', 60, 15000, 'transferencia', fh], [c2, 'Equipo Los Pibes', '11:30', 60, 15000, 'efectivo', fh],
+        [c1, 'Sebastián Torres', '14:00', 90, 22500, 'efectivo', fh], [c2, 'Pablo y amigos', '16:00', 60, 15000, 'mercadopago', fh],
+        [c1, 'Matías Gómez', '20:00', 60, 20000, 'efectivo', fh], [c2, 'Gastón Pérez', '21:00', 90, 30000, 'transferencia', fh],
+        [c1, 'Los Cracks FC', '19:00', 60, 20000, 'efectivo', man], [c2, 'Torneo de la oficina', '21:00', 90, 30000, 'transferencia', man]];
+      var vent = [[3500, 'efectivo', '09:15'], [2400, 'mercadopago', '10:30'], [1800, 'efectivo', '11:45'], [4200, 'efectivo', '14:20'], [2000, 'transferencia', '16:10']];
+      var b = dbPelotear.batch();
+      res.forEach(function (x, i) { var o = { canchaId: x[0], nombre: x[1], tel: '1155' + (100000 + i * 1111), fecha: x[6], hora: x[2], duracion: x[3], precio: x[4], pago: x[5], estado: 'confirmada', _demo: true }; b.set(r.collection('reservas').doc('demo_r' + i), o); STATE.reservas = STATE.reservas.filter(function (q) { return q.id !== 'demo_r' + i; }); STATE.reservas.push(Object.assign({ id: 'demo_r' + i }, o)); });
+      vent.forEach(function (x, i) { var o = { items: {}, total: x[0], pago: x[1], fecha: fh, hora: x[2], _demo: true }; b.set(r.collection('ventas').doc('demo_v' + i), o); STATE.ventasBuffet = STATE.ventasBuffet.filter(function (q) { return q.id !== 'demo_v' + i; }); STATE.ventasBuffet.push(Object.assign({ id: 'demo_v' + i }, o)); });
+      await b.commit();
+      STATE.canchas.forEach(function (c) { c.estado = estadoCanchaDemo(c.id, STATE.reservas); });
+      updateDashboard(); renderCanchas(); renderReservas();
+      if (M) M.textContent = '✅ Cargadas ' + res.length + ' reservas y ' + vent.length + ' ventas de buffet de práctica.';
+      showToast('Datos de práctica cargados', 'green');
+    } catch (e) { _pErr('cargarPractica', e); showToast('No se pudo cargar la práctica'); }
+  };
+  window.quitarPractica = async function () {
+    if (!confirm('¿Quitar los datos de práctica? Tus reservas y ventas reales no se tocan.')) return;
+    var r = _pRef(); var M = document.getElementById('practicaMsg'); if (!r) return;
+    try {
+      var n = 0, b = dbPelotear.batch();
+      for (var k of ['reservas', 'ventas']) {
+        var sn = await r.collection(k).where('_demo', '==', true).get();
+        sn.docs.forEach(function (d) { b.delete(d.ref); n++; });
+      }
+      await b.commit();
+      STATE.reservas = STATE.reservas.filter(function (q) { return !q._demo; });
+      STATE.ventasBuffet = STATE.ventasBuffet.filter(function (q) { return !q._demo; });
+      STATE.canchas.forEach(function (c) { c.estado = estadoCanchaDemo(c.id, STATE.reservas); });
+      updateDashboard(); renderCanchas(); renderReservas();
+      if (M) M.textContent = '🧹 ' + n + ' registros de práctica quitados.';
+      showToast('Datos de práctica quitados', 'green');
+    } catch (e) { _pErr('quitarPractica', e); showToast('No se pudo quitar la práctica'); }
+  };
+
+  /* ══ BACKUP: automático al abrir (una vez por día, queda en el celular) + descargar / restaurar ══ */
+  function _bkHoyP() { return hoy(); }
+  async function _bkArmar() {
+    var r = _pRef(); var out = { app: 'PeloteAR', ver: '2.0', generadoEn: new Date().toISOString(), config: STATE.config, canchas: STATE.canchas, predios: STATE.predios, productos: STATE.productos, historialCierres: STATE.historialCierres || [] };
+    out.reservas = []; out.ventas = [];
+    if (r) {
+      var a = await r.collection('reservas').get(); out.reservas = a.docs.map(function (d) { return Object.assign({ _id: d.id }, d.data()); });
+      var v = await r.collection('ventas').get(); out.ventas = v.docs.map(function (d) { return Object.assign({ _id: d.id }, d.data()); });
+    }
+    return out;
+  }
+  window.descargarBackup = async function (silencioso) {
+    try {
+      var bk = await _bkArmar(); var blob = new Blob([JSON.stringify(bk)], { type: 'application/json' }); var u = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = u; a.download = 'pelotear-backup-' + hoy() + '.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+      try { localStorage.setItem('pelotear-ultimo-backup', hoy()); } catch (_) {}
+      var el = document.getElementById('ultimoBackup'); if (el) el.textContent = hoy();
+      if (!silencioso) showToast('Backup descargado', 'green');
+    } catch (e) { _pErr('descargarBackup', e); if (!silencioso) showToast('No se pudo generar el backup'); }
+  };
+  window.restaurarBackup = async function (input) {
+    var f = input.files && input.files[0]; if (!f) return; var r = _pRef(); if (!r) return;
+    try {
+      var bk = JSON.parse(await f.text());
+      if (bk.app !== 'PeloteAR') { showToast('Ese archivo no es un backup de PeloteAR'); return; }
+      if (!confirm('¿Restaurar este backup? Se suman/actualizan los datos del archivo; no se borra nada.')) return;
+      var ops = [];
+      ops.push([r.collection('datos').doc('config'), bk.config || {}]); ops.push([r.collection('datos').doc('productos'), { lista: bk.productos || [] }]);
+      (bk.reservas || []).forEach(function (x) { var id = x._id; var o = Object.assign({}, x); delete o._id; if (id) ops.push([r.collection('reservas').doc(id), o]); });
+      (bk.ventas || []).forEach(function (x) { var id = x._id; var o = Object.assign({}, x); delete o._id; if (id) ops.push([r.collection('ventas').doc(id), o]); });
+      for (var i = 0; i < ops.length; i += 400) { var b = dbPelotear.batch(); ops.slice(i, i + 400).forEach(function (o) { b.set(o[0], _pLimpio(o[1]), { merge: true }); }); await b.commit(); }
+      showToast('Backup restaurado (' + ops.length + ' registros). Recargando…', 'green'); setTimeout(function () { location.reload(); }, 1500);
+    } catch (e) { _pErr('restaurarBackup', e); showToast('No se pudo restaurar el backup'); }
+    input.value = '';
+  };
+  setTimeout(function () { try { if (window.CURRENT_USER && localStorage.getItem('pelotear-ultimo-backup') !== hoy()) descargarBackup(true); } catch (_) {} }, 20000);
 
   // P2: Exportar CSV reservas del día
   function exportarCSVReservas() {
@@ -3607,7 +3816,7 @@ window.addEventListener('load', () => {
 
   // P3: Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/PeloteAr/sw-pelotear.js')
+    navigator.serviceWorker.register('/sw.js')
       .catch(e => console.warn('SW error:', e));
   }
 
