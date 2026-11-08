@@ -1360,6 +1360,16 @@ body.light-mode {
   --text3:  #94a3b8;
 }
 
+  /* Tus primeros pasos (solo durante la prueba gratis) */
+  .rt-chk{background:var(--surf1);border:2px solid #2563eb;border-radius:16px;padding:12px 14px;margin:0 16px 12px;box-shadow:0 4px 16px rgba(37,99,235,.30)}
+  .rt-chk .tt{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:0.95rem;margin-bottom:6px;color:var(--text)}
+  .rt-chk .tt button{background:none;border:none;color:var(--text2);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px}
+  .rt-chk .barra{height:6px;border-radius:99px;background:rgba(128,128,128,.25);margin:2px 0 8px;overflow:hidden}
+  .rt-chk .barra i{display:block;height:100%;background:#27ae60;border-radius:99px;transition:width .3s}
+  .rt-chk .paso{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;border-top:1px solid var(--border);padding:10px 2px;font-size:0.9rem;color:var(--text);cursor:pointer;font-family:inherit}
+  .rt-chk .paso .ck{flex-shrink:0;width:24px;height:24px;border-radius:50%;border:2px solid #9aa4b2;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  .rt-chk .paso.ok{opacity:.65;text-decoration:line-through;cursor:default}
+  .rt-chk .paso.ok .ck{background:#27ae60;border-color:#27ae60}
 </style>
 
 <!-- Firebase carga al final del body -->
@@ -1549,6 +1559,7 @@ var __rtPWA = (function() {
         <div class="page-title">Buen día 👋</div>
         <div class="page-sub" id="dashDate">Hoy, cargando...</div>
       </div>
+      <div id="rtChecklist"></div>
 
       <div class="predio-selector" id="dash-predio-selector"></div>
 
@@ -2578,6 +2589,7 @@ function showPage(id, btn) {
   const fab = document.getElementById('fab-btn');
   fab.style.display = ['canchas', 'reservas', 'buffet'].includes(id) ? 'flex' : 'none';
 
+  if (id === 'dashboard') rtChkPintar();
   if (id === 'reservas') renderReservas();
   if (id === 'buffet') renderProductos();
   if (id === 'caja') {
@@ -2829,7 +2841,7 @@ async function guardarReserva() {
   renderCanchas();
   renderReservas();
   closeModal('modal-reserva');
-  showToast('Reserva confirmada ✅', 'green');
+  showToast('Reserva confirmada ✅', 'green'); rtChkMarcar('reserva');
 }
 
 // ═══════════════════════════════ BUFFET ═══
@@ -2946,7 +2958,7 @@ async function confirmarCobroBuffet() {
   updateDashboard();
   renderProductos();
   closeModal('modal-cobro-buffet');
-  showToast('Venta registrada ✅', 'green');
+  showToast('Venta registrada ✅', 'green'); rtChkMarcar('venta');
 }
 
 async function guardarProducto() {
@@ -2962,7 +2974,7 @@ async function guardarProducto() {
   await apiPost('/productos', { lista: STATE.productos });
   renderProductos();
   closeModal('modal-producto');
-  showToast('Producto agregado ✅', 'green');
+  showToast('Producto agregado ✅', 'green'); rtChkMarcar('prod');
 }
 
 // ═══════════════════════════════ WHATSAPP ═══
@@ -3439,9 +3451,9 @@ async function ejecutarCierre() {
   // Si es cierre final, hacer backup
   if (esFinal) {
     await hacerBackup(cierre);
-    showToast('Cierre final completado ✅', 'green');
+    showToast('Cierre final completado ✅', 'green'); rtChkMarcar('cierre');
   } else {
-    showToast('Cierre parcial registrado ✅', 'green');
+    showToast('Cierre parcial registrado ✅', 'green'); rtChkMarcar('cierre');
   }
 
   // Actualizar vista de caja
@@ -3640,7 +3652,39 @@ window.addEventListener('load', () => {
      demoHasta = fin de la prueba; null = cliente real (lo pasa el admin con un botón); sin campo = cuenta nueva o anterior: la prueba arranca hoy. */
   var RT_ADMIN_MAIL = 'rgaraventa@gmail.com';
   function rtSoyAdmin(u) { return !!(u && u.email === RT_ADMIN_MAIL && u.emailVerified) || !!(window.rtIsAdmin && window.rtIsAdmin()); }
+  /* ── Tus primeros pasos: 4 pasos que se tildan solos, solo durante la prueba gratis. Se guarda en este celular; no toca datos. ── */
+  var rtEnPrueba = false;
+  function rtChkClave() { return 'rt_chk_' + ((window.CURRENT_USER && window.CURRENT_USER.uid) || 'x'); }
+  function rtChkLeer() { try { return JSON.parse(localStorage.getItem(rtChkClave()) || '{}') || {}; } catch (_) { return {}; } }
+  function rtChkGuardar(o) { try { localStorage.setItem(rtChkClave(), JSON.stringify(o)); } catch (_) {} }
+  function rtChkVisible() {
+    if (!window.CURRENT_USER) return false;
+    if (rtChkLeer().fin) return false;
+    return rtEnPrueba || !!(window.rtIsAdmin && window.rtIsAdmin());
+  }
+  function rtIrPag(i) { var b = document.querySelectorAll('.nav-btn')[i]; var id = ['dashboard', 'canchas', 'reservas', 'buffet', 'caja', 'mas'][i]; showPage(id, b); }
+  var RT_PASOS = [
+    { k: 'reserva', t: 'Cargá tu primera reserva en «Reservas»',  ir: function () { rtIrPag(2); } },
+    { k: 'prod',    t: 'Cargá un producto en «Buffet»',            ir: function () { rtIrPag(3); } },
+    { k: 'venta',   t: 'Cobrá un consumo del buffet',              ir: function () { rtIrPag(3); } },
+    { k: 'cierre',  t: 'Probá un «Cierre parcial» en «Caja»',      ir: function () { rtIrPag(4); } }
+  ];
+  function rtChkMarcar(k) { try { if (!rtChkVisible()) return; var o = rtChkLeer(); if (o[k]) return; o[k] = 1; rtChkGuardar(o); rtChkPintar(); } catch (_) {} }
+  function rtChkPintar() {
+    var box = document.getElementById('rtChecklist'); if (!box) return;
+    try {
+      if (!rtChkVisible()) { box.innerHTML = ''; return; }
+      var o = rtChkLeer(), hechos = RT_PASOS.filter(function (p) { return o[p.k]; }).length;
+      if (hechos === RT_PASOS.length) { o.fin = 1; rtChkGuardar(o); box.innerHTML = ''; showToast('🎉 ¡Listo! Ya sabés lo básico de PeloteAR', 'green'); return; }
+      box.innerHTML = '<div class="rt-chk"><div class="tt"><span>🚀 Tus primeros pasos (' + hechos + ' de ' + RT_PASOS.length + ')</span><button type="button" onclick="rtChkOcultar()">Ocultar</button></div><div class="barra"><i style="width:' + Math.round(hechos * 100 / RT_PASOS.length) + '%"></i></div>'
+        + RT_PASOS.map(function (p, i) { return '<button type="button" class="paso' + (o[p.k] ? ' ok' : '') + '" onclick="rtChkIr(' + i + ')"><span class="ck">' + (o[p.k] ? '✓' : '') + '</span><span>' + p.t + '</span></button>'; }).join('') + '</div>';
+    } catch (_) { box.innerHTML = ''; }
+  }
+  function rtChkIr(i) { var p = RT_PASOS[i]; if (p && !rtChkLeer()[p.k]) p.ir(); }
+  function rtChkOcultar() { var o = rtChkLeer(); o.fin = 1; rtChkGuardar(o); var b = document.getElementById('rtChecklist'); if (b) b.innerHTML = ''; }
+  window.rtChkMarcar = rtChkMarcar; window.rtChkPintar = rtChkPintar; window.rtChkIr = rtChkIr; window.rtChkOcultar = rtChkOcultar;
   function rtDemoCartel(dias) {
+    rtEnPrueba = true; rtChkPintar();
     if (document.getElementById('rtDemoCartel')) { document.getElementById('rtDemoCartel').remove(); }
     var urgente = dias <= 3, b = document.createElement('a');
     b.id = 'rtDemoCartel'; b.href = 'https://wa.me/5491136547592?text=' + encodeURIComponent('Hola RavenTechs, quiero activar mi cuenta de PeloteAR'); b.target = '_blank';

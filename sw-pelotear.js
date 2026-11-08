@@ -1,5 +1,5 @@
 // sw-pelotear.js — Service Worker PeloteAr
-const CACHE = 'pelotear-v1.1';
+const CACHE = 'pelotear-v1.2';
 const SHELL = ['/PeloteAr/'];
 
 self.addEventListener('install', e => {
